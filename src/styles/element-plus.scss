@@ -11,6 +11,10 @@
   --el-color-primary-dark-2: var(--theme-primary-dark);
 }
 
+.el-popup-parent--hidden{
+    width: 100% !important;
+}
+
 // 按钮圆角
 .el-button {
   border-radius: 4px;

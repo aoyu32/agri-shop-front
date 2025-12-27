@@ -26,5 +26,28 @@ import Footer from './components/Footer.vue'
     margin: 0 auto;
     padding: 24px;
   }
+
+  // ==================== 响应式适配 ====================
+
+  // 平板设备 (768px - 1024px)
+  @media screen and (max-width: 1024px) {
+    .main-content {
+      padding: 20px 16px;
+    }
+  }
+
+  // 小屏设备 (481px - 768px)
+  @media screen and (max-width: 768px) {
+    .main-content {
+      padding: 16px 12px;
+    }
+  }
+
+  // 手机设备 (最大 480px)
+  @media screen and (max-width: 480px) {
+    .main-content {
+      padding: 12px 8px;
+    }
+  }
 }
 </style>

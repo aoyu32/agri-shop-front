@@ -1,77 +1,73 @@
 <template>
   <header class="app-header">
     <div class="header-container">
-      <!-- 左侧：Logo + 平台名称 + 导航 -->
       <div class="header-left">
-        <!-- Logo -->
         <div class="logo-wrapper">
           <img src="@/assets/vue.svg" alt="农购宝" class="logo-img" />
           <span class="platform-name">农购宝</span>
         </div>
 
+        <!-- 菜单按钮 -->
+        <div class="mobile-menu-btn" @click="showMobileMenu = true">
+          <i class="iconfont icon-menu-unfold"></i>
+        </div>
+
         <!-- 导航栏 -->
-        <nav class="nav-menu">
-          <router-link
-            v-for="item in navMenus"
-            :key="item.path"
-            :to="item.path"
-            class="nav-item"
-            active-class="active"
-          >
+        <nav class="nav-menu desktop-nav">
+          <router-link v-for="item in navMenus" :key="item.path" :to="item.path" class="nav-item" active-class="active">
             <i class="iconfont" :class="item.icon"></i>
             <span>{{ item.name }}</span>
           </router-link>
         </nav>
       </div>
 
-      <!-- 右侧：搜索框 + 用户信息 -->
       <div class="header-right">
-        <!-- 搜索框 -->
-        <div class="search-box">
-          <el-input
-            v-model="searchKeyword"
-            placeholder="搜索农产品"
-            :prefix-icon="Search"
-            clearable
-            @keyup.enter="handleSearch"
-          />
+        <!-- 桌面端搜索框 -->
+        <div class="search-box desktop-search">
+          <el-input v-model="searchKeyword" placeholder="搜索农产品" :prefix-icon="Search" clearable
+            @keyup.enter="handleSearch" />
+        </div>
+
+        <!-- 移动端搜索图标 -->
+        <div class="mobile-search-icon" @click="showMobileSearch = true">
+          <i class="iconfont icon-sousuo"></i>
         </div>
 
         <!-- 未登录状态 -->
-        <div v-if="!userStore.userInfo.isLogin" class="auth-buttons">
-          <el-button type="primary" @click="handleLogin">登录</el-button>
-          <el-button @click="handleRegister">注册</el-button>
+        <div v-if="!userStore.userInfo.isLogin" class="auth-section">
+          <el-avatar :size="36" src="https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png" />
+          <div class="auth-links">
+            <span class="auth-link" @click="handleLogin">登录</span>
+            <span class="auth-divider">|</span>
+            <span class="auth-link" @click="handleRegister">注册</span>
+          </div>
         </div>
 
         <!-- 已登录状态 -->
         <div v-else class="user-info">
-          <!-- 购物车（仅消费者显示） -->
-          <div v-if="userStore.isConsumer" class="icon-item cart-icon" @click="goToCart">
-            <el-badge :value="userStore.cartCount" :hidden="userStore.cartCount === 0">
+          <div v-if="userStore.isConsumer" class="icon-item cart-item" @click="goToCart">
+            <el-badge :value="100" :hidden="userStore.cartCount === 0" :max="99">
               <i class="iconfont icon-gouwuche"></i>
             </el-badge>
+            <span class="icon-text">购物车</span>
           </div>
 
-          <!-- 我的订单 -->
           <div class="icon-item" @click="goToOrders">
-            <i class="iconfont icon-gongdan"></i>
+            <i class="iconfont icon-renwu"></i>
             <span class="icon-text">订单</span>
           </div>
 
-          <!-- 我的消息 -->
-          <div class="icon-item" @click="goToMessages">
-            <el-badge :value="userStore.unreadMessages" :hidden="userStore.unreadMessages === 0">
+          <div class="icon-item message-item" @click="goToMessages">
+            <el-badge :value="userStore.unreadMessages" :hidden="userStore.unreadMessages === 0" :max="99">
               <i class="iconfont icon-xiaoxi"></i>
             </el-badge>
             <span class="icon-text">消息</span>
           </div>
 
-          <!-- 用户头像和下拉菜单 -->
-          <el-dropdown trigger="click" @command="handleCommand">
+          <el-dropdown trigger="hover" @command="handleCommand">
             <div class="user-avatar-wrapper">
               <el-avatar :src="userStore.userInfo.avatar" :size="36" />
               <span class="username">{{ userStore.userInfo.username }}</span>
-              <i class="iconfont icon-arrow-down"></i>
             </div>
             <template #dropdown>
               <el-dropdown-menu>
@@ -97,11 +93,32 @@
         </div>
       </div>
     </div>
+
+    <!-- 移动端导航抽屉 -->
+    <el-drawer v-model="showMobileMenu" direction="ltr" :size="280" title="导航菜单">
+      <nav class="mobile-nav-menu">
+        <router-link v-for="item in navMenus" :key="item.path" :to="item.path" class="mobile-nav-item"
+          active-class="active" @click="showMobileMenu = false">
+          <i class="iconfont" :class="item.icon"></i>
+          <span>{{ item.name }}</span>
+        </router-link>
+      </nav>
+    </el-drawer>
+
+    <!-- 移动端搜索对话框 -->
+    <el-dialog v-model="showMobileSearch" title="搜索" width="90%" :close-on-click-modal="true">
+      <el-input v-model="searchKeyword" placeholder="搜索农产品" :prefix-icon="Search" clearable size="large"
+        @keyup.enter="handleMobileSearch" autofocus />
+      <template #footer>
+        <el-button @click="showMobileSearch = false">取消</el-button>
+        <el-button type="primary" @click="handleMobileSearch">搜索</el-button>
+      </template>
+    </el-dialog>
   </header>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
@@ -113,12 +130,16 @@ const userStore = useUserStore()
 // 搜索关键词
 const searchKeyword = ref('')
 
+// 移动端菜单和搜索状态
+const showMobileMenu = ref(false)
+const showMobileSearch = ref(false)
+
 // 基础导航菜单
 const baseNavMenus = [
-  { name: '首页', path: '/home', icon: 'icon-a-zhuyeshouye' },
-  { name: '分类', path: '/category', icon: 'icon-caidan' },
-  { name: 'AI咨询', path: '/ai-consult', icon: 'icon-a-zifuwenben' },
-  { name: '社区', path: '/community', icon: 'icon-yonghuqunzu' }
+  { name: '首页', path: '/home', icon: 'icon-shangdian-1' },
+  { name: '分类', path: '/category', icon: 'icon-app-store' },
+  { name: 'AI咨询', path: '/ai-consult', icon: 'icon-damoxingjichengpingtai' },
+  { name: '社区', path: '/community', icon: 'icon-diqiu' }
 ]
 
 // 商户专属导航
@@ -134,6 +155,24 @@ const navMenus = computed(() => {
   return baseNavMenus
 })
 
+// 监听窗口大小变化，自动关闭移动端菜单
+const handleResize = () => {
+  if (window.innerWidth > 768) {
+    showMobileMenu.value = false
+    showMobileSearch.value = false
+  }
+}
+
+// 组件挂载时添加监听
+onMounted(() => {
+  window.addEventListener('resize', handleResize)
+})
+
+// 组件卸载时移除监听
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
+
 // 搜索处理
 const handleSearch = () => {
   if (!searchKeyword.value.trim()) {
@@ -142,6 +181,12 @@ const handleSearch = () => {
   }
   console.log('搜索:', searchKeyword.value)
   // TODO: 实现搜索功能
+}
+
+// 移动端搜索处理
+const handleMobileSearch = () => {
+  handleSearch()
+  showMobileSearch.value = false
 }
 
 // 登录
@@ -192,187 +237,5 @@ const handleCommand = (command) => {
 </script>
 
 <style lang="scss" scoped>
-.app-header {
-  height: var(--header-height);
-  background-color: var(--bg-white);
-  box-shadow: var(--box-shadow);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-
-  .header-container {
-    max-width: 1400px;
-    height: 100%;
-    margin: 0 auto;
-    padding: 0 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: 48px;
-  }
-
-  .logo-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    cursor: pointer;
-
-    .logo-img {
-      width: 40px;
-      height: 40px;
-    }
-
-    .platform-name {
-      font-size: 24px;
-      font-weight: bold;
-      color: var(--theme-primary-color);
-      font-family: 'ZCOOL XiaoWei', serif;
-    }
-  }
-
-  .nav-menu {
-    display: flex;
-    align-items: center;
-    gap: 32px;
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 16px;
-      color: var(--text-primary-color);
-      padding: 8px 0;
-      position: relative;
-      transition: color 0.3s;
-
-      i {
-        font-size: 18px;
-      }
-
-      &:hover {
-        color: var(--theme-primary-color);
-      }
-
-      &.active {
-        color: var(--theme-primary-color);
-        font-weight: 500;
-
-        &::after {
-          content: '';
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          height: 3px;
-          background-color: var(--theme-primary-color);
-          border-radius: 2px;
-        }
-      }
-    }
-  }
-
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-  }
-
-  .search-box {
-    width: 280px;
-
-    :deep(.el-input__wrapper) {
-      border-radius: 20px;
-      background-color: var(--bg-gray);
-      box-shadow: none;
-
-      &:hover, &.is-focus {
-        background-color: var(--bg-white);
-        box-shadow: 0 0 0 1px var(--theme-primary-color) inset;
-      }
-    }
-  }
-
-  .auth-buttons {
-    display: flex;
-    gap: 12px;
-
-    .el-button {
-      border-radius: 20px;
-    }
-  }
-
-  .user-info {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-
-    .icon-item {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      cursor: pointer;
-      color: var(--text-secondary-color);
-      transition: color 0.3s;
-
-      i {
-        font-size: 20px;
-      }
-
-      .icon-text {
-        font-size: 14px;
-      }
-
-      &:hover {
-        color: var(--theme-primary-color);
-      }
-
-      &.cart-icon i {
-        font-size: 24px;
-      }
-    }
-
-    .user-avatar-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      padding: 4px 12px;
-      border-radius: 20px;
-      transition: background-color 0.3s;
-
-      &:hover {
-        background-color: var(--bg-gray);
-      }
-
-      .username {
-        font-size: 14px;
-        color: var(--text-primary-color);
-        max-width: 100px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      i {
-        font-size: 12px;
-        color: var(--text-secondary-color);
-      }
-    }
-  }
-}
-
-:deep(.el-dropdown-menu__item) {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  i {
-    font-size: 16px;
-  }
-}
+@use './Header.scss' as *;
 </style>

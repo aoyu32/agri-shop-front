@@ -1,6 +1,22 @@
 @font-face {
-  font-family: 'ZCOOL XiaoWei';
+  font-family: 'NotoSansSC';
   src: url('./NotoSansSC-VariableFont_wght.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'ZCOOL XiaoWei';
+  src: url('./ZCOOLXiaoWei-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Quicksand';
+  src: url('./Quicksand-VariableFont_wght.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
   font-display: swap;

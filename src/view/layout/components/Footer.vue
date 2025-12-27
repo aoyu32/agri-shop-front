@@ -64,5 +64,90 @@
     font-size: 14px;
     color: var(--text-placeholder-color);
   }
+
+  // ==================== 响应式适配 ====================
+
+  // 平板设备 (768px - 1024px)
+  @media screen and (max-width: 1024px) {
+    .footer-container {
+      padding: 24px 16px 20px;
+    }
+
+    .footer-content {
+      .footer-section {
+        h3 {
+          font-size: 15px;
+        }
+
+        p {
+          font-size: 13px;
+        }
+      }
+    }
+  }
+
+  // 小屏设备 (481px - 768px)
+  @media screen and (max-width: 768px) {
+    margin-top: 32px;
+
+    .footer-container {
+      padding: 20px 12px 16px;
+    }
+
+    .footer-content {
+      flex-direction: column;
+      gap: 20px;
+      margin-bottom: 20px;
+
+      .footer-section {
+        text-align: center;
+
+        h3 {
+          font-size: 14px;
+          margin-bottom: 8px;
+        }
+
+        p {
+          font-size: 12px;
+        }
+      }
+    }
+
+    .footer-copyright {
+      padding-top: 16px;
+      font-size: 12px;
+    }
+  }
+
+  // 手机设备 (最大 480px)
+  @media screen and (max-width: 480px) {
+    margin-top: 24px;
+
+    .footer-container {
+      padding: 16px 8px 12px;
+    }
+
+    .footer-content {
+      gap: 16px;
+      margin-bottom: 16px;
+
+      .footer-section {
+        h3 {
+          font-size: 13px;
+          margin-bottom: 6px;
+        }
+
+        p {
+          font-size: 11px;
+          line-height: 1.6;
+        }
+      }
+    }
+
+    .footer-copyright {
+      padding-top: 12px;
+      font-size: 11px;
+    }
+  }
 }
 </style>

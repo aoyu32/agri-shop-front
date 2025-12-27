@@ -19,10 +19,10 @@ export const useUserStore = defineStore('user', () => {
   })
 
   // 未读消息数
-  const unreadMessages = ref(0)
+  const unreadMessages = ref(100)
 
   // 购物车数量
-  const cartCount = ref(0)
+  const cartCount = ref(100)
 
   // 计算属性：是否是商户
   const isMerchant = computed(() => userInfo.value.role === USER_ROLES.MERCHANT)
@@ -67,13 +67,13 @@ export const useUserStore = defineStore('user', () => {
       [USER_ROLES.CONSUMER]: {
         id: 1,
         username: '张三',
-        avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',
+        avatar: 'https://i.pravatar.cc/150?img=1',
         role: USER_ROLES.CONSUMER
       },
       [USER_ROLES.MERCHANT]: {
         id: 2,
         username: '李四商户',
-        avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',
+        avatar: 'https://i.pravatar.cc/150?img=13',
         role: USER_ROLES.MERCHANT
       }
     }
