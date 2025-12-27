@@ -1,0 +1,31 @@
+// 覆盖element-plus默认样式为本项目的样式风格
+
+// 主题色覆盖
+:root {
+  --el-color-primary: var(--theme-primary-color);
+  --el-color-primary-light-3: var(--theme-primary-hover);
+  --el-color-primary-light-5: #b7eb8f;
+  --el-color-primary-light-7: #d9f7be;
+  --el-color-primary-light-8: #f6ffed;
+  --el-color-primary-light-9: #f6ffed;
+  --el-color-primary-dark-2: var(--theme-primary-dark);
+}
+
+// 按钮圆角
+.el-button {
+  border-radius: 4px;
+  
+  &.is-round {
+    border-radius: 20px;
+  }
+}
+
+// 输入框
+.el-input__wrapper {
+  border-radius: 4px;
+}
+
+// 下拉菜单
+.el-dropdown-menu {
+  border-radius: 8px;
+}
