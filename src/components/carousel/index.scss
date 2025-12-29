@@ -1,0 +1,88 @@
+.carousel-container {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: var(--bg-gray);
+  position: relative;
+
+  .carousel-swiper {
+    width: 100%;
+    height: 100%;
+  }
+
+  .carousel-item {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-gray);
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+  }
+
+  // 分页器样式
+  :deep(.swiper-pagination) {
+    bottom: 12px;
+  }
+
+  :deep(.swiper-pagination-bullet) {
+    background-color: #fff;
+    opacity: 0.6;
+    width: 8px;
+    height: 8px;
+    margin: 0 4px;
+    transition: all 0.3s;
+  }
+
+  :deep(.swiper-pagination-bullet-active) {
+    background-color: var(--theme-primary-color);
+    opacity: 1;
+    width: 20px;
+    border-radius: 4px;
+  }
+
+  // 导航按钮 - 默认隐藏
+  :deep(.swiper-button-next),
+  :deep(.swiper-button-prev) {
+    color: #fff;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    transition: all 0.3s;
+    opacity: 0;
+    visibility: hidden;
+
+    &::after {
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    &:hover {
+      color: var(--theme-primary-color);
+    }
+  }
+
+  :deep(.swiper-button-next) {
+    right: 12px;
+  }
+
+  :deep(.swiper-button-prev) {
+    left: 12px;
+  }
+
+  // 鼠标悬浮时显示导航按钮
+  &:hover {
+    :deep(.swiper-button-next),
+    :deep(.swiper-button-prev) {
+      opacity: 1;
+      visibility: visible;
+    }
+  }
+}

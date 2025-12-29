@@ -38,7 +38,7 @@
           <el-avatar :size="36" src="https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png" />
           <div class="auth-links">
             <span class="auth-link" @click="handleLogin">登录</span>
-            <span class="auth-divider">|</span>
+            <div class="auth-divider"></div>
             <span class="auth-link" @click="handleRegister">注册</span>
           </div>
         </div>

@@ -1,52 +1,160 @@
 <template>
   <div class="home-page">
-    <h1>欢迎来到农购宝</h1>
-    <p>智能农产品产销服务平台</p>
-    
-    <div class="demo-buttons">
-      <el-button type="primary" @click="switchRole('consumer')">
-        切换为消费者
-      </el-button>
-      <el-button type="success" @click="switchRole('merchant')">
-        切换为商户
-      </el-button>
+    <!-- 顶部区域：轮播图 + 当季农产品 -->
+    <div class="top-section">
+      <div class="carousel-wrapper">
+        <Carousel :banners="banners" />
+      </div>
+      <div class="seasonal-wrapper">
+        <SeasonalProduct :products="seasonalProducts" @click="handleProductClick" />
+      </div>
+    </div>
+
+    <!-- 中部区域：三个列表 -->
+    <div class="middle-section">
+      <!-- 热销农产品 -->
+      <ProductList
+        title="热销农产品"
+        :products="hotProducts"
+        @click="handleProductClick"
+      >
+        <template #default="{ item }">
+          <div class="item-image">
+            <img :src="item.image" :alt="item.name" />
+          </div>
+          <div class="item-info">
+            <div class="item-name">{{ item.name }}</div>
+            <div class="item-footer">
+              <div class="item-tags">
+                <span v-for="(tag, index) in item.tags.slice(0, 2)" :key="index" class="tag">
+                  {{ tag }}
+                </span>
+              </div>
+              <div class="item-sales">销量 {{ item.sales }}</div>
+            </div>
+          </div>
+        </template>
+      </ProductList>
+
+      <!-- 促销农产品 -->
+      <ProductList
+        title="促销农产品"
+        :products="promotionProducts"
+        @click="handleProductClick"
+      >
+        <template #default="{ item }">
+          <div class="item-image">
+            <img :src="item.image" :alt="item.name" />
+          </div>
+          <div class="item-info">
+            <div class="item-name">{{ item.name }}</div>
+            <div class="item-footer">
+              <div class="item-tags">
+                <span v-for="(tag, index) in item.tags.slice(0, 2)" :key="index" class="tag">
+                  {{ tag }}
+                </span>
+              </div>
+              <div class="item-price">
+                <span class="discount-price">¥{{ item.price }}/{{ item.unit }}</span>
+              </div>
+            </div>
+          </div>
+        </template>
+      </ProductList>
+
+      <!-- 农户推荐 -->
+      <ProductList
+        title="农户推荐"
+        :products="farmerProducts"
+        @click="handleProductClick"
+      >
+        <template #default="{ item }">
+          <div class="farmer-avatar">
+            <img :src="item.avatar" :alt="item.shopName" />
+          </div>
+          <div class="farmer-info">
+            <div class="farmer-header">
+              <span class="shop-name">{{ item.shopName }}</span>
+              <span class="rating">⭐ {{ item.rating }}</span>
+            </div>
+            <div class="farmer-desc">{{ item.description }}</div>
+            <div class="farmer-stats">
+              <span>关注 {{ item.followers }}</span>
+              <span>销量 {{ item.sales }}</span>
+            </div>
+          </div>
+        </template>
+      </ProductList>
+    </div>
+
+    <!-- 分类栏 -->
+    <div class="category-section">
+      <CategoryBar :categories="categories" @change="handleCategoryChange" />
+    </div>
+
+    <!-- 产品卡片网格 -->
+    <div class="products-grid">
+      <ProductCard
+        v-for="product in displayProducts"
+        :key="product.id"
+        :product="product"
+        @click="handleProductClick(product)"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
-import { useUserStore } from '@/store/modules/user'
+import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
+import Carousel from '@/components/carousel/index.vue'
+import SeasonalProduct from './components/SeasonalProduct.vue'
+import ProductList from './components/ProductList.vue'
+import CategoryBar from './components/CategoryBar.vue'
+import ProductCard from '@/components/product-card/index.vue'
 
-const userStore = useUserStore()
+// 导入 mock 数据
+import { bannerList } from '@/mock/home/banner'
+import { seasonalProducts as seasonalData } from '@/mock/home/seasonal'
+import { hotProducts as hotData, promotionProducts as promotionData, farmerProducts as farmerData } from '@/mock/home/product-list'
+import { categories as categoryData } from '@/mock/home/category'
+import { productCards } from '@/mock/home/products'
 
-const switchRole = (role) => {
-  userStore.mockLogin(role)
-  ElMessage.success(`已切换为${role === 'consumer' ? '消费者' : '商户'}角色`)
+// 轮播图数据
+const banners = ref(bannerList)
+
+// 当季农产品
+const seasonalProducts = ref(seasonalData)
+
+// 热销农产品
+const hotProducts = ref(hotData)
+
+// 促销农产品
+const promotionProducts = ref(promotionData)
+
+// 农户推荐
+const farmerProducts = ref(farmerData)
+
+// 分类数据
+const categories = ref(categoryData)
+
+// 产品卡片数据
+const displayProducts = ref(productCards)
+
+// 事件处理
+const handleProductClick = (product) => {
+  ElMessage.info(`点击了产品: ${product.name || product.description}`)
+}
+
+const handleMore = (type) => {
+  ElMessage.info(`查看更多: ${type}`)
+}
+
+const handleCategoryChange = (category) => {
+  ElMessage.info(`切换分类: ${category.name}`)
 }
 </script>
 
 <style lang="scss" scoped>
-.home-page {
-  text-align: center;
-  padding: 60px 20px;
-
-  h1 {
-    font-size: 48px;
-    color: var(--theme-primary-color);
-    margin-bottom: 16px;
-  }
-
-  p {
-    font-size: 20px;
-    color: var(--text-secondary-color);
-    margin-bottom: 48px;
-  }
-
-  .demo-buttons {
-    display: flex;
-    gap: 16px;
-    justify-content: center;
-  }
-}
+@use './index.scss'
 </style>
