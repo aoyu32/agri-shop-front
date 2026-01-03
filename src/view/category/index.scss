@@ -1,0 +1,74 @@
+.category-page {
+  display: flex;
+  gap: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+
+  // 右侧内容区域
+  .category-content {
+    flex: 1;
+    min-width: 0;
+    
+
+    // 产品列表
+    .product-list {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    // Element Plus 分页
+    .pagination {
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+      background-color: var(--bg-white);
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+  }
+
+  // 响应式适配
+  @media screen and (max-width: 1200px) {
+    .category-content {
+      .product-list {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+  }
+
+  @media screen and (max-width: 1024px) {
+    flex-direction: column;
+
+    .category-content {
+      .product-list {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+  }
+
+  @media screen and (max-width: 768px) {
+    padding: 16px 12px;
+
+    .category-content {
+      .product-list {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+
+      .pagination {
+        padding: 16px;
+      }
+    }
+  }
+
+  @media screen and (max-width: 480px) {
+    .category-content {
+      .product-list {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+}

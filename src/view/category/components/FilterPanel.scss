@@ -1,0 +1,99 @@
+.filter-panel {
+  background-color: var(--bg-white);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 20px;
+  margin-bottom: 16px;
+
+  .filter-row {
+    display: flex;
+    margin-bottom: 16px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .filter-label {
+      width: 80px;
+      flex-shrink: 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary-color);
+      padding-top: 6px;
+    }
+
+    .filter-options {
+      flex: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+
+      .filter-option {
+        padding: 6px 16px;
+        font-size: 13px;
+        color: var(--text-secondary-color);
+        background-color: var(--bg-gray);
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s;
+
+        &:hover {
+          color: var(--theme-primary-color);
+          background-color: rgba(82, 196, 26, 0.1);
+        }
+
+        &.active {
+          color: #fff;
+          background-color: var(--theme-primary-color);
+        }
+      }
+
+      .reset-btn {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 16px;
+        font-size: 13px;
+        color: var(--text-secondary-color);
+        background-color: var(--bg-gray);
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-left: auto;
+
+        i {
+          font-size: 14px;
+        }
+
+        &:hover {
+          color: #ff4d4f;
+          background-color: rgba(255, 77, 79, 0.1);
+        }
+      }
+    }
+  }
+}
+
+// 响应式
+@media screen and (max-width: 768px) {
+  .filter-panel {
+    padding: 16px;
+
+    .filter-row {
+      flex-direction: column;
+      gap: 12px;
+
+      .filter-label {
+        width: 100%;
+        padding-top: 0;
+      }
+
+      .filter-options {
+        .reset-btn {
+          margin-left: 0;
+        }
+      }
+    }
+  }
+}
