@@ -23,7 +23,7 @@ const routes = [
         path: 'ai-consult',
         name: 'AiConsult',
         component: () => import('@/view/ai-consult/index.vue'),
-        meta: { title: 'AI咨询' }
+        meta: { title: 'AI咨询', hideFooter: true }
       },
       {
         path: 'community',
