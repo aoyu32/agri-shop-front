@@ -17,7 +17,7 @@ export const hotProducts = [
   {
     id: 3,
     name: '新疆阿克苏苹果 正宗冰糖心 脆甜爽口 产地直供 10斤礼盒装',
-    image: 'https://images.unsplash.com/photo-1587049352846-4a222e784acc?w=200',
+    image: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400',
     tags: ['冰糖心', '包邮', '产地直发'],
     sales: 2156
   },
@@ -31,7 +31,7 @@ export const hotProducts = [
   {
     id: 5,
     name: '云南沃柑橘子 当季新鲜水果 皮薄多汁 买2送1 包邮到家',
-    image: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=200',
+    image: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=200&h=200&fit=crop',
     tags: ['促销', '买2送1', '包邮'],
     sales: 1523
   },
@@ -52,7 +52,7 @@ export const hotProducts = [
   {
     id: 8,
     name: '福建平和蜜柚 红心柚子 果肉饱满 清甜多汁 4个装',
-    image: 'https://images.unsplash.com/photo-1587049352846-4a222e784acc?w=200',
+    image: 'https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?w=200&h=200&fit=crop',
     tags: ['精品', '包邮', '产地直发'],
     sales: 1123
   }
@@ -72,7 +72,7 @@ export const promotionProducts = [
   {
     id: 2,
     name: '云南沃柑橘子 当季新鲜水果 皮薄多汁 买2送1特惠装',
-    image: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=200',
+    image: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=200&h=200&fit=crop',
     tags: ['促销', '买2送1', '包邮'],
     originalPrice: 59.9,
     price: 29.9,
@@ -99,7 +99,7 @@ export const promotionProducts = [
   {
     id: 5,
     name: '福建平和蜜柚 红心柚子 果肉饱满 清甜多汁 精品4个装',
-    image: 'https://images.unsplash.com/photo-1587049352846-4a222e784acc?w=200',
+    image: 'https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?w=200&h=200&fit=crop',
     tags: ['精品', '包邮', '产地直发'],
     originalPrice: 69.9,
     price: 39.9,
@@ -130,7 +130,7 @@ export const farmerProducts = [
   {
     id: 1,
     shopName: '老张家农场',
-    avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=老张家农场&backgroundColor=b6e3ff',
     rating: 4.9,
     description: '专注有机农产品种植10年，提供新鲜健康的农家产品，绿色无公害',
     followers: 12580,
@@ -139,7 +139,7 @@ export const farmerProducts = [
   {
     id: 2,
     shopName: '李大叔果园',
-    avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=李大叔果园&backgroundColor=c7f2ff',
     rating: 4.8,
     description: '自家果园直供，无农药化肥，保证新鲜品质，果树种植经验20年',
     followers: 9856,
@@ -148,7 +148,7 @@ export const farmerProducts = [
   {
     id: 3,
     shopName: '王阿姨菜园',
-    avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=王阿姨菜园&backgroundColor=ffd5dc',
     rating: 5.0,
     description: '传统手工制作，选用优质食材，健康美味，农家特色产品专营',
     followers: 15230,
@@ -157,7 +157,7 @@ export const farmerProducts = [
   {
     id: 4,
     shopName: '刘师傅养殖场',
-    avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=刘师傅养殖场&backgroundColor=ffdfbf',
     rating: 4.7,
     description: '散养家禽，绿色健康，品质保证，养殖基地占地200亩',
     followers: 7890,
@@ -166,7 +166,7 @@ export const farmerProducts = [
   {
     id: 5,
     shopName: '陈家水产',
-    avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=陈家水产&backgroundColor=b6e3ff',
     rating: 4.9,
     description: '深海捕捞，冷链直达，新鲜海鲜每日供应，品质保鲜承诺',
     followers: 18560,
@@ -175,7 +175,7 @@ export const farmerProducts = [
   {
     id: 6,
     shopName: '赵家有机蔬菜',
-    avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=赵家有机蔬菜&backgroundColor=d1fae5',
     rating: 4.8,
     description: '有机认证蔬菜基地，无农药无化肥，健康生活从这里开始',
     followers: 11230,

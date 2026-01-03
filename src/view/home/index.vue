@@ -1,12 +1,13 @@
 <template>
   <div class="home-page">
-    <!-- 顶部区域：轮播图 + 当季农产品 -->
+    <!-- 顶部区域：轮播图 + 用户信息卡片 -->
     <div class="top-section">
       <div class="carousel-wrapper">
         <Carousel :banners="banners" />
       </div>
-      <div class="seasonal-wrapper">
-        <SeasonalProduct :products="seasonalProducts" @click="handleProductClick" />
+      <div class="user-info-wrapper">
+        <UserInfoCard />
+        <SeasonalProducts />
       </div>
     </div>
 
@@ -108,23 +109,20 @@
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import Carousel from '@/components/carousel/index.vue'
-import SeasonalProduct from './components/SeasonalProduct.vue'
+import UserInfoCard from './components/UserInfoCard.vue'
+import SeasonalProducts from './components/SeasonalProducts.vue'
 import ProductList from './components/ProductList.vue'
 import CategoryBar from './components/CategoryBar.vue'
 import ProductCard from '@/components/product-card/index.vue'
 
 // 导入 mock 数据
 import { bannerList } from '@/mock/home/banner'
-import { seasonalProducts as seasonalData } from '@/mock/home/seasonal'
 import { hotProducts as hotData, promotionProducts as promotionData, farmerProducts as farmerData } from '@/mock/home/product-list'
 import { categories as categoryData } from '@/mock/home/category'
 import { productCards } from '@/mock/home/products'
 
 // 轮播图数据
 const banners = ref(bannerList)
-
-// 当季农产品
-const seasonalProducts = ref(seasonalData)
 
 // 热销农产品
 const hotProducts = ref(hotData)
@@ -144,10 +142,6 @@ const displayProducts = ref(productCards)
 // 事件处理
 const handleProductClick = (product) => {
   ElMessage.info(`点击了产品: ${product.name || product.description}`)
-}
-
-const handleMore = (type) => {
-  ElMessage.info(`查看更多: ${type}`)
 }
 
 const handleCategoryChange = (category) => {

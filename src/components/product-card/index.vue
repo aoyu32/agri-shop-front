@@ -119,7 +119,7 @@ const handleClick = () => {
         .price {
           font-size: 18px;
           font-weight: 600;
-          color: var(--theme-primary-color);
+          color: #ff4d4f;
         }
       }
 

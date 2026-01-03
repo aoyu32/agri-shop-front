@@ -47,7 +47,7 @@ export const productCards = [
   {
     id: 5,
     name: '云南沃柑橘子',
-    image: 'https://images.unsplash.com/photo-1587049352846-4a222e784acc?w=400',
+    image: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400&h=400&fit=crop',
     description: '云南沃柑橘子，皮薄多汁，酸甜适中，维C含量高，买2送1优惠',
     tags: ['促销', '买2送1', '包邮'],
     price: '29.9',
@@ -80,7 +80,7 @@ export const productCards = [
   {
     id: 8,
     name: '福建平和蜜柚',
-    image: 'https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?w=400',
+    image: 'https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?w=400&h=400&fit=crop',
     description: '福建平和蜜柚，果肉饱满，汁多味甜，清火润肺，4个装包邮',
     tags: ['精品', '包邮', '产地直发'],
     price: '39.9',
