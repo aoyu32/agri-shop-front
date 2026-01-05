@@ -1,0 +1,162 @@
+.product-comments {
+    .comment-summary {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 24px;
+        background-color: var(--bg-gray);
+        border-radius: 8px;
+        margin-bottom: 24px;
+
+        .summary-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+
+            .rating-score {
+                font-size: 48px;
+                font-weight: 600;
+                color: #ff9900;
+            }
+
+            .total-comments {
+                font-size: 14px;
+                color: var(--text-secondary-color);
+            }
+        }
+
+        .summary-right {
+            display: flex;
+            gap: 12px;
+
+            .filter-item {
+                padding: 8px 16px;
+                font-size: 14px;
+                color: var(--text-secondary-color);
+                background-color: var(--bg-white);
+                border-radius: 6px;
+                cursor: pointer;
+                transition: all 0.3s;
+
+                &:hover {
+                    color: var(--theme-primary-color);
+                    background-color: rgba(82, 196, 26, 0.05);
+                }
+
+                &.active {
+                    color: var(--theme-primary-color);
+                    background-color: rgba(82, 196, 26, 0.1);
+                    font-weight: 500;
+                }
+            }
+        }
+    }
+
+    .comment-list {
+        .comment-item {
+            padding: 24px;
+            background-color: var(--bg-white);
+            border-radius: 8px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+            &:last-child {
+                margin-bottom: 0;
+            }
+
+            .comment-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 16px;
+
+                .user-info {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+
+                    .user-avatar {
+                        width: 40px;
+                        height: 40px;
+                        border-radius: 50%;
+                    }
+
+                    .user-details {
+                        .user-name {
+                            font-size: 14px;
+                            font-weight: 500;
+                            color: var(--text-primary-color);
+                            margin-bottom: 4px;
+                        }
+                    }
+                }
+
+                .comment-time {
+                    font-size: 13px;
+                    color: var(--text-placeholder-color);
+                }
+            }
+
+            .comment-content {
+                font-size: 14px;
+                color: var(--text-primary-color);
+                line-height: 1.6;
+                margin-bottom: 12px;
+            }
+
+            .comment-spec {
+                font-size: 13px;
+                color: var(--text-secondary-color);
+                margin-bottom: 12px;
+            }
+
+            .comment-images {
+                display: flex;
+                gap: 8px;
+                flex-wrap: wrap;
+                margin-bottom: 12px;
+
+                .comment-image {
+                    width: 100px;
+                    height: 100px;
+                    object-fit: cover;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    transition: transform 0.3s;
+
+                    &:hover {
+                        transform: scale(1.05);
+                    }
+                }
+            }
+
+            .comment-footer {
+                display: flex;
+                justify-content: flex-end;
+
+                .comment-action {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    padding: 6px 12px;
+                    font-size: 13px;
+                    color: var(--text-secondary-color);
+                    cursor: pointer;
+                    border-radius: 4px;
+                    transition: all 0.3s;
+
+                    &:hover {
+                        color: var(--theme-primary-color);
+                        background-color: rgba(82, 196, 26, 0.05);
+                    }
+                }
+            }
+        }
+    }
+
+    .comment-pagination {
+        display: flex;
+        justify-content: center;
+        margin-top: 24px;
+    }
+}

@@ -24,7 +24,7 @@
 </template>
 
 <script setup>
-defineProps({
+const props = defineProps({
   product: {
     type: Object,
     required: true
@@ -34,7 +34,7 @@ defineProps({
 const emit = defineEmits(['click'])
 
 const handleClick = () => {
-  emit('click')
+  emit('click', props.product)
 }
 </script>
 

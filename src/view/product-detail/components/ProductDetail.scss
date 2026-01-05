@@ -1,0 +1,111 @@
+.product-detail {
+  .detail-tabs {
+    display: flex;
+    border-bottom: 2px solid var(--border-light-color);
+    margin-bottom: 24px;
+
+    .tab-item {
+      padding: 16px 32px;
+      font-size: 16px;
+      color: var(--text-secondary-color);
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+
+      &:hover {
+        color: var(--theme-primary-color);
+      }
+
+      &.active {
+        color: var(--theme-primary-color);
+        font-weight: 500;
+
+        &::after {
+          content: '';
+          position: absolute;
+          bottom: -2px;
+          left: 0;
+          right: 0;
+          height: 2px;
+          background-color: var(--theme-primary-color);
+        }
+      }
+    }
+  }
+
+  .detail-content {
+    .markdown-content {
+      line-height: 1.8;
+      color: var(--text-primary-color);
+
+      :deep(h1) {
+        font-size: 28px;
+        font-weight: 600;
+        margin: 32px 0 16px;
+        color: var(--text-primary-color);
+      }
+
+      :deep(h2) {
+        font-size: 24px;
+        font-weight: 600;
+        margin: 28px 0 14px;
+        color: var(--text-primary-color);
+      }
+
+      :deep(h3) {
+        font-size: 20px;
+        font-weight: 500;
+        margin: 24px 0 12px;
+        color: var(--text-primary-color);
+      }
+
+      :deep(p) {
+        margin: 12px 0;
+        line-height: 1.8;
+      }
+
+      :deep(img) {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 20px 0;
+      }
+
+      :deep(ul), :deep(ol) {
+        margin: 12px 0;
+        padding-left: 24px;
+
+        li {
+          margin: 8px 0;
+        }
+      }
+
+      :deep(table) {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+
+        th, td {
+          padding: 12px;
+          border: 1px solid var(--border-color);
+          text-align: left;
+        }
+
+        th {
+          background-color: var(--bg-gray);
+          font-weight: 500;
+        }
+      }
+
+      :deep(hr) {
+        border: none;
+        border-top: 1px solid var(--border-light-color);
+        margin: 24px 0;
+      }
+    }
+
+    .comments-content {
+      min-height: 200px;
+    }
+  }
+}

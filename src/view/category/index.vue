@@ -31,7 +31,7 @@
           v-for="product in displayProducts"
           :key="product.id"
           :product="product"
-          @click="handleProductClick(product)"
+          @click="handleProductClick"
         />
       </div>
 
@@ -55,6 +55,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { ArrowLeft, ArrowRight } from '@element-plus/icons-vue'
 import CategorySidebar from './components/CategorySidebar.vue'
@@ -62,6 +63,8 @@ import FilterPanel from './components/FilterPanel.vue'
 import ProductCard from '@/components/product-card/index.vue'
 import { categoryTree, filterOptions } from '@/mock/category/categories'
 import { productCards } from '@/mock/home/products'
+
+const router = useRouter()
 
 // 选中的分类
 const selectedCategory = ref(categoryTree[0])
@@ -122,7 +125,8 @@ const handleReset = () => {
 
 // 产品点击
 const handleProductClick = (product) => {
-  ElMessage.info(`查看产品: ${product.name}`)
+  // 跳转到商品详情页
+  router.push({ name: 'ProductDetail', params: { id: product.id } })
 }
 
 // 分页变化

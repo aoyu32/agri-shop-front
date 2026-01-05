@@ -36,6 +36,12 @@ const routes = [
         name: 'MarketForecast',
         component: () => import('@/view/market-forecast/index.vue'),
         meta: { title: '行情预测', requireMerchant: true }
+      },
+      {
+        path: 'product/:id',
+        name: 'ProductDetail',
+        component: () => import('@/view/product-detail/index.vue'),
+        meta: { title: '商品详情' }
       }
     ]
   }

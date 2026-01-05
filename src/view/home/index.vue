@@ -99,7 +99,7 @@
         v-for="product in displayProducts"
         :key="product.id"
         :product="product"
-        @click="handleProductClick(product)"
+        @click="handleProductClick"
       />
     </div>
   </div>
@@ -107,6 +107,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import Carousel from '@/components/carousel/index.vue'
 import UserInfoCard from './components/UserInfoCard.vue'
@@ -120,6 +121,8 @@ import { bannerList } from '@/mock/home/banner'
 import { hotProducts as hotData, promotionProducts as promotionData, farmerProducts as farmerData } from '@/mock/home/product-list'
 import { categories as categoryData } from '@/mock/home/category'
 import { productCards } from '@/mock/home/products'
+
+const router = useRouter()
 
 // 轮播图数据
 const banners = ref(bannerList)
@@ -141,7 +144,8 @@ const displayProducts = ref(productCards)
 
 // 事件处理
 const handleProductClick = (product) => {
-  ElMessage.info(`点击了产品: ${product.name || product.description}`)
+  // 跳转到商品详情页
+  router.push({ name: 'ProductDetail', params: { id: product.id } })
 }
 
 const handleCategoryChange = (category) => {
