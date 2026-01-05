@@ -3,7 +3,7 @@
     <div class="header-container">
       <div class="header-left">
         <div class="logo-wrapper">
-          <img src="@/assets/vue.svg" alt="农购宝" class="logo-img" />
+          <img src="@/assets/logo/logo.jpg" alt="农购宝" class="logo-img" />
           <span class="platform-name">农购宝</span>
         </div>
 
