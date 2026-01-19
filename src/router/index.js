@@ -32,6 +32,12 @@ const routes = [
         meta: { title: '社区' }
       },
       {
+        path: 'community/post/:id',
+        name: 'PostDetail',
+        component: () => import('@/view/community/post-detail.vue'),
+        meta: { title: '帖子详情' }
+      },
+      {
         path: 'market-forecast',
         name: 'MarketForecast',
         component: () => import('@/view/market-forecast/index.vue'),
