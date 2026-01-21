@@ -23,13 +23,13 @@
 
       <div class="header-right">
         <!-- 桌面端搜索框 -->
-        <div class="search-box desktop-search">
+        <div v-if="!isSearchPage" class="search-box desktop-search">
           <el-input v-model="searchKeyword" placeholder="搜索农产品" :prefix-icon="Search" clearable
             @keyup.enter="handleSearch" />
         </div>
 
         <!-- 移动端搜索图标 -->
-        <div class="mobile-search-icon" @click="showMobileSearch = true">
+        <div v-if="!isSearchPage" class="mobile-search-icon" @click="showMobileSearch = true">
           <i class="iconfont icon-sousuo"></i>
         </div>
 
@@ -119,13 +119,17 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { Search } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
+
+// 判断是否是搜索页面
+const isSearchPage = computed(() => route.name === 'Search')
 
 // 搜索关键词
 const searchKeyword = ref('')
@@ -179,8 +183,16 @@ const handleSearch = () => {
     ElMessage.warning('请输入搜索关键词')
     return
   }
-  console.log('搜索:', searchKeyword.value)
-  // TODO: 实现搜索功能
+  
+  // 在新标签页打开搜索页面
+  const searchUrl = router.resolve({
+    name: 'Search',
+    query: { q: searchKeyword.value.trim() }
+  })
+  window.open(searchUrl.href, '_blank')
+  
+  // 清空搜索框
+  searchKeyword.value = ''
 }
 
 // 移动端搜索处理

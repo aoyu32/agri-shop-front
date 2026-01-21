@@ -20,6 +20,12 @@ const routes = [
         meta: { title: '分类' }
       },
       {
+        path: 'search',
+        name: 'Search',
+        component: () => import('@/view/search/index.vue'),
+        meta: { title: '搜索结果' }
+      },
+      {
         path: 'ai-consult',
         name: 'AiConsult',
         component: () => import('@/view/ai-consult/index.vue'),

@@ -45,16 +45,18 @@ const handleClick = () => {
   overflow: hidden;
   cursor: pointer;
   transition: all 0.3s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f0f0f0;
 
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    border-color: var(--theme-primary-color);
   }
 
   .card-image {
     width: 100%;
-    height: 200px;
+    height: 160px;
     overflow: hidden;
     background-color: var(--bg-gray);
 
@@ -66,47 +68,50 @@ const handleClick = () => {
     }
 
     &:hover img {
-      transform: scale(1.05);
+      transform: scale(1.03);
     }
   }
 
   .card-content {
-    padding: 16px;
+    padding: 12px;
 
     .card-title {
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 600;
       color: var(--text-primary-color);
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      line-height: 1.4;
     }
 
     .card-desc {
-      font-size: 13px;
+      font-size: 12px;
       color: var(--text-secondary-color);
-      line-height: 1.5;
-      margin-bottom: 12px;
+      line-height: 1.4;
+      margin-bottom: 8px;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      min-height: 40px;
+      min-height: 32px;
     }
 
     .card-tags {
       display: flex;
-      gap: 6px;
+      gap: 4px;
       flex-wrap: wrap;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
+      min-height: 20px;
 
       .tag {
-        padding: 3px 8px;
-        font-size: 11px;
+        padding: 2px 6px;
+        font-size: 10px;
         color: var(--theme-primary-color);
         background-color: #f6ffed;
-        border-radius: 4px;
+        border-radius: 3px;
+        line-height: 1.2;
       }
     }
 
@@ -117,17 +122,42 @@ const handleClick = () => {
 
       .price-info {
         .price {
-          font-size: 18px;
+          font-size: 16px;
           font-weight: 600;
           color: #ff4d4f;
+          line-height: 1.2;
         }
       }
 
       .sales-info {
         .sales {
-          font-size: 12px;
+          font-size: 11px;
           color: var(--text-placeholder-color);
         }
+      }
+    }
+  }
+
+  // 响应式适配
+  @media screen and (max-width: 768px) {
+    .card-image {
+      height: 140px;
+    }
+
+    .card-content {
+      padding: 10px;
+
+      .card-title {
+        font-size: 13px;
+      }
+
+      .card-desc {
+        font-size: 11px;
+        min-height: 28px;
+      }
+
+      .card-footer .price-info .price {
+        font-size: 15px;
       }
     }
   }
