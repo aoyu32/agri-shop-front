@@ -203,14 +203,12 @@ const handleMobileSearch = () => {
 
 // 登录
 const handleLogin = () => {
-  // 模拟登录 - 开发阶段
-  userStore.mockLogin('consumer')
-  ElMessage.success('登录成功')
+  router.push('/auth/login')
 }
 
 // 注册
 const handleRegister = () => {
-  ElMessage.info('注册功能开发中')
+  router.push('/auth/register')
 }
 
 // 跳转购物车
@@ -235,7 +233,11 @@ const handleCommand = (command) => {
       ElMessage.info('个人中心功能开发中')
       break
     case 'shop':
-      ElMessage.info('我的店铺功能开发中')
+      if (userStore.userInfo.role === 'merchant') {
+        router.push('/merchant')
+      } else {
+        ElMessage.info('我的店铺功能开发中')
+      }
       break
     case 'settings':
       ElMessage.info('设置功能开发中')
@@ -243,6 +245,7 @@ const handleCommand = (command) => {
     case 'logout':
       userStore.logout()
       ElMessage.success('已退出登录')
+      router.push('/home')
       break
   }
 }

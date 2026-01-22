@@ -88,8 +88,16 @@
       <!-- 已登录 - 农户商户 -->
       <div v-else-if="userStore.isMerchant" class="merchant-section">
         <div class="user-header">
-          <el-avatar :src="userStore.userInfo.avatar" :size="45" />
-          <div class="user-name">{{ userStore.userInfo.username }}</div>
+          <div class="user-info">
+            <el-avatar :src="userStore.userInfo.avatar" :size="45" />
+            <div class="user-name">{{ userStore.userInfo.username }}</div>
+          </div>
+          <div class="header-buttons">
+            <div class="address-btn" @click="handleMerchantClick('shop')">
+              <i class="iconfont icon-shangdian-2"></i>
+              <span>我的店铺</span>
+            </div>
+          </div>
         </div>
 
         <div class="order-status">
@@ -110,16 +118,12 @@
             <span>我的评价</span>
           </div>
           <div class="status-item" @click="handleMerchantClick('orders')">
-            <i class="iconfont icon-dingdan"></i>
+            <i class="iconfont icon-zhangdan"></i>
             <span>所有订单</span>
           </div>
-        </div>
-
-        <div class="quick-links">
-          <div class="link-item" @click="handleMerchantClick('products')">
+          <div class="status-item" @click="handleMerchantClick('products')">
             <i class="iconfont icon-shangpin"></i>
-            <span>我的商品数</span>
-            <span class="link-value">{{ merchantStats.products }}</span>
+            <span>农产品</span>
           </div>
         </div>
 
@@ -149,10 +153,12 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
 import { getLunarDate } from '@/utils/lunar'
 
+const router = useRouter()
 const userStore = useUserStore()
 
 // 消费者订单数量
@@ -202,11 +208,11 @@ const lunarDate = computed(() => {
 })
 
 const handleLogin = () => {
-  ElMessage.info('跳转到登录页面')
+  router.push('/auth/login')
 }
 
 const handleRegister = () => {
-  ElMessage.info('跳转到注册页面')
+  router.push('/auth/register')
 }
 
 const handleOrderClick = (status) => {
@@ -218,7 +224,11 @@ const handleLinkClick = (type) => {
 }
 
 const handleMerchantClick = (type) => {
-  ElMessage.info(`跳转到商户${type}`)
+  if (type === 'shop') {
+    router.push('/merchant')
+  } else {
+    ElMessage.info(`跳转到商户${type}`)
+  }
 }
 
 </script>
