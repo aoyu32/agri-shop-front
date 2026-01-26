@@ -96,6 +96,12 @@ const routes = [
         name: 'ProductDetail',
         component: () => import('@/view/product-detail/index.vue'),
         meta: { title: '商品详情' }
+      },
+      {
+        path: 'profile',
+        name: 'Profile',
+        component: () => import('@/view/profile/index.vue'),
+        meta: { title: '个人中心', requireAuth: true }
       }
     ]
   }

@@ -1,0 +1,135 @@
+.profile-page {
+  max-width: 1400px;
+  margin: 0 auto;
+
+  .profile-header {
+    background: var(--bg-white);
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex: 1;
+
+      .user-details {
+        flex: 1;
+
+        .username {
+          font-size: 24px;
+          font-weight: 600;
+          color: var(--text-primary-color);
+          margin: 0 0 8px 0;
+        }
+
+        .user-meta {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 16px;
+          margin-top: 12px;
+
+          .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            color: var(--text-secondary-color);
+
+            i {
+              font-size: 16px;
+              color: var(--theme-primary-color);
+            }
+          }
+        }
+
+        .user-bio {
+          margin-top: 12px;
+          font-size: 14px;
+          color: var(--text-secondary-color);
+          line-height: 1.6;
+        }
+      }
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+
+      .user-stats {
+        display: flex;
+        gap: 40px;
+
+        .stat-item {
+          text-align: center;
+
+          .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--theme-primary-color);
+            margin-bottom: 4px;
+          }
+
+          .stat-label {
+            font-size: 13px;
+            color: var(--text-secondary-color);
+          }
+        }
+      }
+    }
+  }
+
+  .profile-content {
+    display: flex;
+    gap: 20px;
+    align-items: stretch;
+
+    .content-area {
+      flex: 1;
+      background: var(--bg-white);
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      min-height: 600px;
+    }
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .profile-page {
+    padding: 12px;
+
+    .profile-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 20px;
+
+      .user-info {
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .header-right {
+        width: 100%;
+        flex-direction: column;
+        gap: 20px;
+
+        .user-stats {
+          width: 100%;
+          justify-content: space-around;
+        }
+      }
+    }
+
+    .profile-content {
+      flex-direction: column;
+    }
+  }
+}

@@ -230,7 +230,7 @@ const goToMessages = () => {
 const handleCommand = (command) => {
   switch (command) {
     case 'profile':
-      ElMessage.info('个人中心功能开发中')
+      router.push('/profile')
       break
     case 'shop':
       if (userStore.userInfo.role === 'merchant') {

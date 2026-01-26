@@ -40,7 +40,7 @@
 
         <div class="comment-footer">
           <div class="comment-action" @click="likeComment(comment)">
-            <span>👍</span>
+            <span><i class="iconfont icon-like"></i></span>
             <span>{{ comment.likes }}</span>
           </div>
         </div>
