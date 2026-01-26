@@ -213,12 +213,12 @@ const handleRegister = () => {
 
 // 跳转购物车
 const goToCart = () => {
-  ElMessage.info('购物车功能开发中')
+  router.push('/profile?menu=cart')
 }
 
 // 跳转订单
 const goToOrders = () => {
-  ElMessage.info('订单功能开发中')
+  router.push('/profile?menu=order-all')
 }
 
 // 跳转消息

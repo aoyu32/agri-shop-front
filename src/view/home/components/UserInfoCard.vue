@@ -17,7 +17,7 @@
       <!-- 已登录 - 普通消费者 -->
       <div v-else-if="userStore.isConsumer" class="consumer-section">
         <div class="user-header">
-          <div class="user-info">
+          <div class="user-info" @click="goToProfile">
             <el-avatar :src="userStore.userInfo.avatar" :size="45" />
             <div class="user-name">{{ userStore.userInfo.username }}</div>
           </div>
@@ -88,7 +88,7 @@
       <!-- 已登录 - 农户商户 -->
       <div v-else-if="userStore.isMerchant" class="merchant-section">
         <div class="user-header">
-          <div class="user-info">
+          <div class="user-info" @click="goToProfile">
             <el-avatar :src="userStore.userInfo.avatar" :size="45" />
             <div class="user-name">{{ userStore.userInfo.username }}</div>
           </div>
@@ -215,19 +215,56 @@ const handleRegister = () => {
   router.push('/auth/register')
 }
 
+const goToProfile = () => {
+  router.push('/profile')
+}
+
 const handleOrderClick = (status) => {
-  ElMessage.info(`查看${status}订单`)
+  const menuMap = {
+    'shipped': 'order-shipped',
+    'paid': 'order-paid',
+    'pending': 'order-pending',
+    'received': 'review-pending'
+  }
+  const menu = menuMap[status] || 'order-all'
+  router.push(`/profile?menu=${menu}`)
 }
 
 const handleLinkClick = (type) => {
-  ElMessage.info(`跳转到${type}`)
+  const menuMap = {
+    'favorite': 'favorite',
+    'address': 'address',
+    'footprint': 'footprint'
+  }
+  const menu = menuMap[type]
+  if (menu) {
+    router.push(`/profile?menu=${menu}`)
+  } else {
+    ElMessage.info(`跳转到${type}`)
+  }
 }
 
 const handleMerchantClick = (type) => {
   if (type === 'shop') {
     router.push('/merchant')
   } else {
-    ElMessage.info(`跳转到商户${type}`)
+    const menuMap = {
+      'pending': 'order-paid',
+      'shipped': 'order-shipped',
+      'reviews': 'review-done',
+      'orders': 'order-all',
+      'products': 'profile?menu=cart'
+    }
+    const menu = menuMap[type]
+    if (menu) {
+      if (menu.startsWith('profile')) {
+        router.push(`/${menu}`)
+      } else {
+        router.push(`/profile?menu=${menu}`)
+      }
+    } else {
+      ElMessage.info(`跳转到商户${type}`)
+    }
   }
 }
 

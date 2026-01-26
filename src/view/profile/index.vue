@@ -55,7 +55,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
@@ -89,6 +89,16 @@ const stats = ref({
 
 // 当前激活的菜单
 const activeMenu = ref(route.query.menu || 'cart')
+
+// 监听路由变化，更新激活菜单
+watch(
+  () => route.query.menu,
+  (newMenu) => {
+    if (newMenu) {
+      activeMenu.value = newMenu
+    }
+  }
+)
 
 // 组件映射
 const componentMap = {
