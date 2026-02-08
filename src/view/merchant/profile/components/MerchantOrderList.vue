@@ -211,7 +211,7 @@ const mockOrders = ref([
       avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
     },
     products: [
-      { id: 1, name: '有机西红柿', spec: '500g/份', quantity: 2, price: 15.80, image: 'https://via.placeholder.com/100' },
+      { id: 1, name: '有机西红柿', spec: '500g/份', quantity: 2, price: 15.80, image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=100&h=100&fit=crop' },
       { id: 2, name: '新鲜黄瓜', spec: '500g/份', quantity: 1, price: 8.50, image: 'https://via.placeholder.com/100' }
     ],
     totalAmount: 40.10,

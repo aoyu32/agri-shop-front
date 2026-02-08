@@ -178,7 +178,7 @@ const mockReviews = ref([
     product: {
       name: '有机西红柿',
       spec: '500g/份',
-      image: 'https://via.placeholder.com/100'
+      image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=100&h=100&fit=crop'
     },
     rating: 4.5,
     content: '非常新鲜，口感很好，下次还会再买！',

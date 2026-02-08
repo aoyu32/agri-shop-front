@@ -37,7 +37,7 @@
       <div class="security-item danger">
         <div class="item-info">
           <div class="item-icon">
-            <i class="iconfont icon-gaojing"></i>
+            <i class="iconfont icon-delete"></i>
           </div>
           <div class="item-content">
             <div class="item-title">账号注销</div>

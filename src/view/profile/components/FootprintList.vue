@@ -48,7 +48,7 @@ const footprints = ref([
     id: 1,
     name: '新鲜有机西红柿',
     price: '12.80',
-    image: 'https://images.unsplash.com/photo-1546470427-227e2e1e8c8e?w=200&h=200&fit=crop',
+    image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=200&h=200&fit=crop',
     time: '10:30',
     date: '2026-01-22'
   },

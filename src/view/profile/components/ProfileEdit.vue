@@ -13,10 +13,20 @@
     >
       <el-form-item label="头像">
         <div class="avatar-upload">
-          <el-avatar :src="form.avatar" :size="100" />
-          <el-button type="primary" size="small" @click="handleUploadAvatar">
-            更换头像
-          </el-button>
+          <el-upload
+            class="avatar-uploader"
+            :show-file-list="false"
+            :before-upload="handleAvatarUpload"
+            accept="image/*"
+          >
+            <div class="avatar-container">
+              <el-avatar :src="form.avatar" :size="100" />
+              <div class="avatar-overlay">
+                <i class="iconfont icon-edit"></i>
+                <span>更换头像</span>
+              </div>
+            </div>
+          </el-upload>
         </div>
       </el-form-item>
 
@@ -25,11 +35,7 @@
       </el-form-item>
 
       <el-form-item label="手机号">
-        <el-input v-model="form.phone" disabled>
-          <template #append>
-            <el-button @click="handleChangePhone">修改</el-button>
-          </template>
-        </el-input>
+        <el-input v-model="form.phone" disabled />
       </el-form-item>
 
       <el-form-item label="城市" prop="city">
@@ -81,12 +87,29 @@ const rules = {
   ]
 }
 
-const handleUploadAvatar = () => {
-  ElMessage.info('头像上传功能开发中')
-}
+const handleAvatarUpload = (file) => {
+  // 检查文件大小（5MB）
+  const isLt5M = file.size / 1024 / 1024 < 5
+  if (!isLt5M) {
+    ElMessage.warning('头像大小不能超过 5MB')
+    return false
+  }
 
-const handleChangePhone = () => {
-  ElMessage.info('请前往安全设置修改手机号')
+  // 检查文件类型
+  const isImage = file.type.startsWith('image/')
+  if (!isImage) {
+    ElMessage.warning('只能上传图片文件')
+    return false
+  }
+
+  // 模拟头像上传
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    form.avatar = e.target.result
+    ElMessage.success('头像上传成功')
+  }
+  reader.readAsDataURL(file)
+  return false
 }
 
 const handleSubmit = async () => {
@@ -124,9 +147,47 @@ const handleReset = () => {
     max-width: 600px;
 
     .avatar-upload {
-      display: flex;
-      align-items: center;
-      gap: 20px;
+      .avatar-uploader {
+        :deep(.el-upload) {
+          cursor: pointer;
+        }
+
+        .avatar-container {
+          position: relative;
+          width: 100px;
+          height: 100px;
+          border-radius: 50%;
+          overflow: hidden;
+
+          .avatar-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+            color: #fff;
+
+            i {
+              font-size: 24px;
+            }
+
+            span {
+              font-size: 12px;
+            }
+          }
+
+          &:hover .avatar-overlay {
+            opacity: 1;
+          }
+        }
+      }
     }
   }
 }

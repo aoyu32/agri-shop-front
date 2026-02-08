@@ -107,6 +107,7 @@ const componentMap = {
   'order-pending': OrderList,
   'order-paid': OrderList,
   'order-shipped': OrderList,
+  'order-completed': OrderList,
   'order-refund': OrderList,
   'review-pending': ReviewList,
   'review-done': ReviewList,

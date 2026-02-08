@@ -64,8 +64,14 @@
         <el-form-item label="手机号" prop="phone">
           <el-input v-model="form.phone" placeholder="请输入手机号" />
         </el-form-item>
-        <el-form-item label="省市区" prop="region">
-          <el-input v-model="form.region" placeholder="请选择省市区" />
+        <el-form-item label="省市区" prop="addressCode">
+          <el-cascader
+            v-model="form.addressCode"
+            :options="regionData"
+            placeholder="请选择省市区"
+            style="width: 100%"
+            clearable
+          />
         </el-form-item>
         <el-form-item label="详细地址" prop="detail">
           <el-input
@@ -90,21 +96,25 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { ArrowDown } from '@element-plus/icons-vue'
+import { regionData } from 'element-china-area-data'
 
 const addresses = ref([
   {
     id: 1,
     name: '张三',
     phone: '138****0001',
-    region: '北京市 朝阳区',
-    detail: '三里屯街道某某小区1号楼101室',
-    fullAddress: '北京市 朝阳区 三里屯街道某某小区1号楼101室',
+    addressCode: ['110000', '110100', '110101'],
+    region: '北京市 东城区',
+    detail: '东华门街道某某小区1号楼101室',
+    fullAddress: '北京市 东城区 东华门街道某某小区1号楼101室',
     isDefault: true
   },
   {
     id: 2,
     name: '李四',
     phone: '139****0002',
+    addressCode: ['310000', '310100', '310115'],
     region: '上海市 浦东新区',
     detail: '陆家嘴街道某某大厦2栋202室',
     fullAddress: '上海市 浦东新区 陆家嘴街道某某大厦2栋202室',
@@ -119,7 +129,7 @@ const editingId = ref(null)
 const form = ref({
   name: '',
   phone: '',
-  region: '',
+  addressCode: [],
   detail: '',
   isDefault: false
 })
@@ -130,7 +140,7 @@ const rules = {
     { required: true, message: '请输入手机号', trigger: 'blur' },
     { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
   ],
-  region: [{ required: true, message: '请选择省市区', trigger: 'blur' }],
+  addressCode: [{ required: true, message: '请选择省市区', trigger: 'change' }],
   detail: [{ required: true, message: '请输入详细地址', trigger: 'blur' }]
 }
 
@@ -143,7 +153,7 @@ const handleAdd = () => {
   form.value = {
     name: '',
     phone: '',
-    region: '',
+    addressCode: [],
     detail: '',
     isDefault: false
   }
@@ -155,11 +165,32 @@ const handleEdit = (address) => {
   form.value = {
     name: address.name,
     phone: address.phone,
-    region: address.region,
+    addressCode: address.addressCode || [],
     detail: address.detail,
     isDefault: address.isDefault
   }
   dialogVisible.value = true
+}
+
+const getRegionText = (addressCode) => {
+  if (!addressCode || addressCode.length === 0) return ''
+  
+  const findRegion = (code, data) => {
+    for (const item of data) {
+      if (item.value === code) return item.label
+      if (item.children) {
+        const found = findRegion(code, item.children)
+        if (found) return found
+      }
+    }
+    return ''
+  }
+
+  const province = findRegion(addressCode[0], regionData)
+  const city = addressCode[1] ? findRegion(addressCode[1], regionData) : ''
+  const district = addressCode[2] ? findRegion(addressCode[2], regionData) : ''
+
+  return [province, city, district].filter(Boolean).join(' ')
 }
 
 const handleSubmit = async () => {
@@ -168,6 +199,8 @@ const handleSubmit = async () => {
   try {
     await formRef.value.validate()
 
+    const regionText = getRegionText(form.value.addressCode)
+
     if (editingId.value) {
       // 编辑
       const index = addresses.value.findIndex(a => a.id === editingId.value)
@@ -175,7 +208,8 @@ const handleSubmit = async () => {
         addresses.value[index] = {
           ...addresses.value[index],
           ...form.value,
-          fullAddress: `${form.value.region} ${form.value.detail}`
+          region: regionText,
+          fullAddress: `${regionText} ${form.value.detail}`
         }
         ElMessage.success('地址修改成功')
       }
@@ -184,7 +218,8 @@ const handleSubmit = async () => {
       const newAddress = {
         id: Date.now(),
         ...form.value,
-        fullAddress: `${form.value.region} ${form.value.detail}`
+        region: regionText,
+        fullAddress: `${regionText} ${form.value.detail}`
       }
       addresses.value.push(newAddress)
       ElMessage.success('地址添加成功')

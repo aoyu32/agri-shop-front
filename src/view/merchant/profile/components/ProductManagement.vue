@@ -274,7 +274,7 @@ const mockProducts = ref([
     stock: 150,
     sales: 89,
     status: 'on_sale',
-    image: 'https://via.placeholder.com/100',
+    image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=100&h=100&fit=crop',
     description: '新鲜有机西红柿，口感鲜美'
   },
   {

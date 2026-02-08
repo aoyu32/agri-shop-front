@@ -17,10 +17,10 @@
           <i class="iconfont icon-renwu"></i>
           <span>我的订单</span>
         </template>
-        <el-menu-item index="order-all">所有订单</el-menu-item>
         <el-menu-item index="order-pending">待付款</el-menu-item>
         <el-menu-item index="order-paid">待发货</el-menu-item>
         <el-menu-item index="order-shipped">待收货</el-menu-item>
+        <el-menu-item index="order-completed">已完成</el-menu-item>
         <el-menu-item index="order-refund">退货退款</el-menu-item>
       </el-sub-menu>
 
@@ -55,7 +55,7 @@
       <!-- 账号安全 -->
       <el-sub-menu index="account">
         <template #title>
-          <i class="iconfont icon-anquan"></i>
+          <i class="iconfont icon-kaiguan"></i>
           <span>账号安全</span>
         </template>
         <el-menu-item index="profile-edit">修改信息</el-menu-item>

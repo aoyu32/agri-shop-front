@@ -62,7 +62,7 @@ const cartItems = ref([
     spec: '500g/份',
     price: 12.8,
     quantity: 2,
-    image: 'https://images.unsplash.com/photo-1546470427-227e2e1e8c8e?w=200&h=200&fit=crop',
+    image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=200&h=200&fit=crop',
     checked: false
   },
   {
@@ -158,6 +158,11 @@ const goShopping = () => {
 
 <style lang="scss" scoped>
 .cart-list {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+
   .list-header {
     display: flex;
     justify-content: space-between;
@@ -165,6 +170,7 @@ const goShopping = () => {
     margin-bottom: 20px;
     padding-bottom: 16px;
     border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
 
     h3 {
       margin: 0;
@@ -177,6 +183,11 @@ const goShopping = () => {
   .empty-state {
     text-align: center;
     padding: 80px 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 
     i {
       font-size: 80px;
@@ -192,6 +203,10 @@ const goShopping = () => {
   }
 
   .cart-items {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 20px;
+
     .cart-item {
       display: flex;
       align-items: center;
@@ -231,27 +246,31 @@ const goShopping = () => {
         width: 80px;
         font-size: 16px;
         font-weight: 600;
-        color: var(--theme-primary-color);
+        color: #f5222d;
       }
 
       .item-total {
         width: 100px;
         font-size: 18px;
         font-weight: 600;
-        color: var(--theme-primary-color);
+        color: #f5222d;
         text-align: right;
       }
     }
   }
 
   .cart-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 20px;
     padding: 20px;
-    background-color: var(--bg-gray);
-    border-radius: 6px;
+    background-color: #fff;
+    border-top: 1px solid var(--border-color);
+    z-index: 10;
 
     .footer-right {
       display: flex;
@@ -270,11 +289,25 @@ const goShopping = () => {
         .total-price {
           font-size: 24px;
           font-weight: 600;
-          color: var(--theme-primary-color);
+          color: #f5222d;
           margin-left: 8px;
         }
       }
     }
+  }
+}
+
+// 购物车列表滚动条样式
+.cart-items::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cart-items::-webkit-scrollbar-thumb {
+  background: #d9d9d9;
+  border-radius: 3px;
+
+  &:hover {
+    background: #bfbfbf;
   }
 }
 </style>

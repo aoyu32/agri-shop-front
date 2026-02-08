@@ -17,17 +17,14 @@
       <div v-for="item in favorites" :key="item.id" class="favorite-item">
         <div class="item-image" @click="handleViewProduct(item)">
           <img :src="item.image" :alt="item.name" />
-          <div class="item-overlay">
-            <el-button type="primary" size="small">查看详情</el-button>
-          </div>
         </div>
         <div class="item-info">
           <div class="item-name" @click="handleViewProduct(item)">{{ item.name }}</div>
           <div class="item-footer">
             <span class="item-price">¥{{ item.price }}</span>
             <div class="item-actions">
-              <el-button type="primary" size="small" @click="handleAddToCart(item)">
-                加入购物车
+              <el-button type="primary" size="small" @click="handleViewProduct(item)">
+                查看详情
               </el-button>
               <el-button type="danger" text size="small" @click="handleRemove(item)">
                 取消收藏
@@ -52,7 +49,7 @@ const favorites = ref([
     id: 1,
     name: '新鲜有机西红柿',
     price: '12.80',
-    image: 'https://images.unsplash.com/photo-1546470427-227e2e1e8c8e?w=300&h=300&fit=crop'
+    image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=300&h=300&fit=crop'
   },
   {
     id: 2,
@@ -76,10 +73,6 @@ const favorites = ref([
 
 const handleViewProduct = (item) => {
   router.push(`/product/${item.id}`)
-}
-
-const handleAddToCart = (item) => {
-  ElMessage.success(`${item.name} 已加入购物车`)
 }
 
 const handleRemove = (item) => {
@@ -179,27 +172,9 @@ const goShopping = () => {
           transition: transform 0.3s;
         }
 
-        .item-overlay {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.5);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          opacity: 0;
-          transition: opacity 0.3s;
-        }
-
         &:hover {
           img {
-            transform: scale(1.1);
-          }
-
-          .item-overlay {
-            opacity: 1;
+            transform: scale(1.05);
           }
         }
       }
@@ -223,17 +198,24 @@ const goShopping = () => {
         }
 
         .item-footer {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+
           .item-price {
             font-size: 18px;
             font-weight: 600;
-            color: var(--theme-primary-color);
-            display: block;
-            margin-bottom: 8px;
+            color: #f5222d;
           }
 
           .item-actions {
             display: flex;
-            gap: 8px;
+            gap: 12px;
+
+            :deep(.el-button+.el-button) {
+              margin-left: 0;
+              padding-left: 0;
+            }
           }
         }
       }
