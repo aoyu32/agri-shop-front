@@ -36,14 +36,14 @@ const routes = [
     component: () => import('@/view/admin/index.vue'),
     meta: { title: '系统管理端', requireAuth: true, requireRole: USER_ROLES.ADMIN }
   },
-  // 农户路由
+  // 农户管理后台
   {
-    path: '/merchant',
-    name: 'Merchant',
-    component: () => import('@/view/merchant/index.vue'),
-    meta: { title: '农户管理端', requireAuth: true, requireRole: USER_ROLES.MERCHANT }
+    path: '/merchant/profile',
+    name: 'MerchantProfile',
+    component: () => import('@/view/merchant/profile/index.vue'),
+    meta: { title: '农户管理后台', requireAuth: true, requireRole: USER_ROLES.MERCHANT }
   },
-  // 消费者路由（主应用）
+  // 主应用路由（消费者）
   {
     path: '/',
     component: Layout,
@@ -126,7 +126,7 @@ router.beforeEach((to, from, next) => {
     if (userRole === USER_ROLES.ADMIN) {
       next('/admin')
     } else if (userRole === USER_ROLES.MERCHANT) {
-      next('/merchant')
+      next('/merchant/profile')
     } else {
       next('/home')
     }

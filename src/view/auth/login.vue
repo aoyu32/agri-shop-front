@@ -98,12 +98,21 @@ const toggleRole = () => {
   selectedRole.value = selectedRole.value === USER_ROLES.CONSUMER 
     ? USER_ROLES.MERCHANT 
     : USER_ROLES.CONSUMER
+  
+  // 切换角色时自动填充对应的测试账号
+  if (selectedRole.value === USER_ROLES.CONSUMER) {
+    loginForm.username = 'consumer123'
+    loginForm.password = '123456'
+  } else {
+    loginForm.username = 'farmer123'
+    loginForm.password = '123456'
+  }
 }
 
-// 登录表单
+// 登录表单（默认填充消费者测试账号）
 const loginForm = reactive({
-  username: '',
-  password: '',
+  username: 'consumer123',
+  password: '123456',
   remember: false
 })
 

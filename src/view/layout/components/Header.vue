@@ -218,7 +218,13 @@ const goToCart = () => {
 
 // 跳转订单
 const goToOrders = () => {
-  router.push('/profile?menu=order-all')
+  if (userStore.isMerchant) {
+    // 农户跳转到商家管理后台的全部订单
+    router.push('/merchant/profile?menu=order-all')
+  } else {
+    // 消费者跳转到个人中心的订单页面
+    router.push('/profile?menu=order-all')
+  }
 }
 
 // 跳转消息
@@ -230,17 +236,26 @@ const goToMessages = () => {
 const handleCommand = (command) => {
   switch (command) {
     case 'profile':
-      router.push('/profile')
-      break
-    case 'shop':
-      if (userStore.userInfo.role === 'merchant') {
-        router.push('/merchant')
+      if (userStore.isMerchant) {
+        // 农户跳转到商家管理后台
+        router.push('/merchant/profile')
       } else {
-        ElMessage.info('我的店铺功能开发中')
+        // 消费者跳转到个人中心
+        router.push('/profile')
       }
       break
+    case 'shop':
+      // 跳转到商家管理后台
+      router.push('/merchant/profile')
+      break
     case 'settings':
-      ElMessage.info('设置功能开发中')
+      if (userStore.isMerchant) {
+        // 农户跳转到商家管理后台的店铺设置
+        router.push('/merchant/profile?menu=shop-settings')
+      } else {
+        // 消费者的设置功能
+        router.push('/profile?menu=security-settings')
+      }
       break
     case 'logout':
       userStore.logout()

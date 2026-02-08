@@ -9,9 +9,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@bytemd/plugin-gfm": "^1.22.0",
+    "@bytemd/plugin-highlight": "^1.22.0",
+    "@bytemd/vue-next": "^1.22.0",
     "@element-plus/icons-vue": "^2.3.2",
     "axios": "^1.13.2",
+    "bytemd": "^1.22.0",
+    "element-china-area-data": "^6.1.0",
     "element-plus": "^2.13.0",
+    "highlight.js": "^11.11.1",
     "marked": "^17.0.1",
     "pinia": "^3.0.4",
     "swiper": "^12.0.3",

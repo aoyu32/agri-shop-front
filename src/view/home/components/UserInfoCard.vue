@@ -216,7 +216,13 @@ const handleRegister = () => {
 }
 
 const goToProfile = () => {
-  router.push('/profile')
+  if (userStore.isMerchant) {
+    // 农户跳转到商家管理后台
+    router.push('/merchant/profile')
+  } else {
+    // 消费者跳转到个人中心
+    router.push('/profile')
+  }
 }
 
 const handleOrderClick = (status) => {
@@ -246,22 +252,18 @@ const handleLinkClick = (type) => {
 
 const handleMerchantClick = (type) => {
   if (type === 'shop') {
-    router.push('/merchant')
+    router.push('/merchant/profile')
   } else {
     const menuMap = {
-      'pending': 'order-paid',
+      'pending': 'order-pending',
       'shipped': 'order-shipped',
-      'reviews': 'review-done',
+      'reviews': 'reviews',
       'orders': 'order-all',
-      'products': 'profile?menu=cart'
+      'products': 'product-list'
     }
     const menu = menuMap[type]
     if (menu) {
-      if (menu.startsWith('profile')) {
-        router.push(`/${menu}`)
-      } else {
-        router.push(`/profile?menu=${menu}`)
-      }
+      router.push(`/merchant/profile?menu=${menu}`)
     } else {
       ElMessage.info(`跳转到商户${type}`)
     }
