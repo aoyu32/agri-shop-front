@@ -71,17 +71,13 @@
             </div>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item command="profile">
+                <el-dropdown-item v-if="userStore.isConsumer" command="profile">
                   <i class="iconfont icon-yonghu"></i>
                   个人中心
                 </el-dropdown-item>
                 <el-dropdown-item v-if="userStore.isMerchant" command="shop">
-                  <i class="iconfont icon-building-store"></i>
+                  <i class="iconfont icon-shangdian-2"></i>
                   我的店铺
-                </el-dropdown-item>
-                <el-dropdown-item command="settings">
-                  <i class="iconfont icon-shezhi"></i>
-                  设置
                 </el-dropdown-item>
                 <el-dropdown-item divided command="logout">
                   <i class="iconfont icon-tuichu"></i>
@@ -238,26 +234,12 @@ const goToOrders = () => {
 const handleCommand = (command) => {
   switch (command) {
     case 'profile':
-      if (userStore.isMerchant) {
-        // 农户跳转到商家管理后台
-        router.push('/merchant/profile')
-      } else {
-        // 消费者跳转到个人中心
-        router.push('/profile')
-      }
+      // 消费者跳转到个人中心
+      router.push('/profile')
       break
     case 'shop':
-      // 跳转到商家管理后台
+      // 农户跳转到商家管理后台
       router.push('/merchant/profile')
-      break
-    case 'settings':
-      if (userStore.isMerchant) {
-        // 农户跳转到商家管理后台的店铺设置
-        router.push('/merchant/profile?menu=shop-settings')
-      } else {
-        // 消费者的设置功能
-        router.push('/profile?menu=security-settings')
-      }
       break
     case 'logout':
       userStore.logout()
