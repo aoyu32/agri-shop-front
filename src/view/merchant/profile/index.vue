@@ -73,6 +73,7 @@ const componentMap = {
   'order-pending': MerchantOrderList,
   'order-shipped': MerchantOrderList,
   'order-completed': MerchantOrderList,
+  'order-refund': MerchantOrderList,
   'order-all': MerchantOrderList,
   'product-list': ProductManagement,
   'product-add': ProductManagement,

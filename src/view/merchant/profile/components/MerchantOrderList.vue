@@ -68,12 +68,14 @@
           </template>
         </el-table-column>
         <el-table-column prop="createTime" label="下单时间" width="160" />
-        <el-table-column label="操作" width="220" fixed="right">
+        <el-table-column label="操作" width="320" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" size="small" @click="handleViewDetail(row)">查看详情</el-button>
             <el-button v-if="row.status === 'pending'" type="success" size="small" @click="handleShip(row)">发货</el-button>
             <el-button v-if="row.status === 'shipped'" type="info" size="small" @click="handleViewLogistics(row)">查看物流</el-button>
-            <el-button v-if="row.status === 'completed'" type="danger" size="small" @click="handleDelete(row)">删除</el-button>
+            <el-button v-if="row.status === 'refund'" type="success" size="small" @click="handleRefundApprove(row)">同意{{ row.refundType === 'refund' ? '退款' : '退货' }}</el-button>
+            <el-button v-if="row.status === 'refund'" type="danger" size="small" @click="handleRefundReject(row)">拒绝</el-button>
+            <el-button v-if="row.status === 'completed' || row.status === 'refund'" type="danger" size="small" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -135,6 +137,40 @@
             <span class="label">订单状态：</span>
             <el-tag :type="getStatusType(currentOrder.status)">{{ getStatusText(currentOrder.status) }}</el-tag>
           </div>
+          <div v-if="currentOrder.refundType" class="detail-item">
+            <span class="label">退款类型：</span>
+            <span class="value">{{ currentOrder.refundType === 'refund' ? '仅退款' : '退货退款' }}</span>
+          </div>
+          <div v-if="currentOrder.refundReason" class="detail-item">
+            <span class="label">退款原因：</span>
+            <span class="value">{{ currentOrder.refundReason }}</span>
+          </div>
+          <div v-if="currentOrder.refundDescription" class="detail-item">
+            <span class="label">问题描述：</span>
+            <span class="value">{{ currentOrder.refundDescription }}</span>
+          </div>
+          <div v-if="currentOrder.refundStatus" class="detail-item">
+            <span class="label">退款状态：</span>
+            <span class="value">{{ currentOrder.refundStatus }}</span>
+          </div>
+          <div v-if="currentOrder.refundTime" class="detail-item">
+            <span class="label">申请时间：</span>
+            <span class="value">{{ currentOrder.refundTime }}</span>
+          </div>
+          <div v-if="currentOrder.refundImages && currentOrder.refundImages.length > 0" class="detail-item">
+            <span class="label">退款凭证：</span>
+            <div class="refund-images">
+              <el-image
+                v-for="(image, index) in currentOrder.refundImages"
+                :key="index"
+                :src="image.url"
+                :preview-src-list="currentOrder.refundImages.map(img => img.url)"
+                :initial-index="index"
+                fit="cover"
+                class="refund-image"
+              />
+            </div>
+          </div>
         </div>
 
         <div class="detail-section">
@@ -183,7 +219,9 @@
             <div class="order-actions">
               <el-button v-if="currentOrder.status === 'pending'" type="success" @click="handleShipFromDetail">发货</el-button>
               <el-button v-if="currentOrder.status === 'shipped'" type="info" @click="handleViewLogistics(currentOrder)">查看物流</el-button>
-              <el-button v-if="currentOrder.status === 'completed'" type="danger" @click="handleDeleteFromDetail">删除</el-button>
+              <el-button v-if="currentOrder.status === 'refund'" type="success" @click="handleRefundApproveFromDetail">同意{{ currentOrder.refundType === 'refund' ? '退款' : '退货' }}</el-button>
+              <el-button v-if="currentOrder.status === 'refund'" type="danger" @click="handleRefundRejectFromDetail">拒绝</el-button>
+              <el-button v-if="currentOrder.status === 'completed' || currentOrder.status === 'refund'" type="danger" @click="handleDeleteFromDetail">删除</el-button>
               <el-button @click="detailDialogVisible = false">关闭</el-button>
             </div>
           </div>
@@ -251,6 +289,53 @@ const mockOrders = ref([
     status: 'completed',
     createTime: '2024-02-06 09:15:30',
     address: '山东省烟台市芝罘区南大街300号'
+  },
+  {
+    id: 4,
+    orderNo: 'ORD202402080004',
+    buyer: {
+      name: '赵六',
+      phone: '136****3456',
+      avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
+    },
+    products: [
+      { id: 6, name: '新鲜白菜', spec: '1kg/份', quantity: 2, price: 7.00, image: 'https://via.placeholder.com/100' }
+    ],
+    totalAmount: 14.00,
+    status: 'refund',
+    refundType: 'refund',
+    refundReason: '商品质量问题',
+    refundDescription: '收到的白菜有部分腐烂，无法食用',
+    refundStatus: '待商家处理',
+    refundTime: '2024-02-08 14:20:00',
+    refundImages: [
+      { url: 'https://via.placeholder.com/200', name: 'image1.jpg' },
+      { url: 'https://via.placeholder.com/200', name: 'image2.jpg' }
+    ],
+    createTime: '2024-02-05 11:30:00',
+    address: '山东省威海市环翠区文化路400号'
+  },
+  {
+    id: 5,
+    orderNo: 'ORD202402080005',
+    buyer: {
+      name: '孙七',
+      phone: '135****7890',
+      avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
+    },
+    products: [
+      { id: 7, name: '新鲜土豆', spec: '2kg/份', quantity: 1, price: 21.00, image: 'https://via.placeholder.com/100' }
+    ],
+    totalAmount: 21.00,
+    status: 'refund',
+    refundType: 'return',
+    refundReason: '不想要了',
+    refundDescription: '',
+    refundStatus: '待商家处理',
+    refundTime: '2024-02-07 16:45:00',
+    refundImages: [],
+    createTime: '2024-02-04 13:20:00',
+    address: '山东省潍坊市奎文区胜利街500号'
   }
 ])
 
@@ -278,6 +363,7 @@ const pageTitle = computed(() => {
     'order-pending': '待发货订单',
     'order-shipped': '已发货订单',
     'order-completed': '已完成订单',
+    'order-refund': '退货退款',
     'order-all': '所有订单'
   }
   return titleMap[menu] || '订单管理'
@@ -288,7 +374,8 @@ const currentStatus = computed(() => {
   const statusMap = {
     'order-pending': 'pending',
     'order-shipped': 'shipped',
-    'order-completed': 'completed'
+    'order-completed': 'completed',
+    'order-refund': 'refund'
   }
   return statusMap[menu] || 'all'
 })
@@ -330,7 +417,8 @@ const getStatusType = (status) => {
   const typeMap = {
     'pending': 'warning',
     'shipped': 'primary',
-    'completed': 'success'
+    'completed': 'success',
+    'refund': 'danger'
   }
   return typeMap[status] || 'info'
 }
@@ -339,7 +427,8 @@ const getStatusText = (status) => {
   const textMap = {
     'pending': '待发货',
     'shipped': '已发货',
-    'completed': '已完成'
+    'completed': '已完成',
+    'refund': '退款中'
   }
   return textMap[status] || '未知'
 }
@@ -414,6 +503,82 @@ const handleDeleteFromDetail = () => {
   if (currentOrder.value) {
     detailDialogVisible.value = false
     handleDelete(currentOrder.value)
+  }
+}
+
+const handleRefundApprove = (row) => {
+  const isRefundOnly = row.refundType === 'refund'
+  const typeText = isRefundOnly ? '仅退款' : '退货退款'
+  
+  if (isRefundOnly) {
+    // 仅退款：直接同意
+    ElMessageBox.confirm(
+      `确定同意该${typeText}申请吗？同意后将直接退款给买家。`,
+      '同意退款',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'success'
+      }
+    ).then(() => {
+      const order = mockOrders.value.find(o => o.id === row.id)
+      if (order) {
+        order.refundStatus = '商家已同意，退款处理中'
+        ElMessage.success('已同意退款申请，系统将自动退款给买家')
+      }
+    }).catch(() => {})
+  } else {
+    // 退货退款：需要买家退货
+    ElMessageBox.confirm(
+      `确定同意该${typeText}申请吗？同意后买家需要先退货，收到货后再退款。`,
+      '同意退货',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'success'
+      }
+    ).then(() => {
+      const order = mockOrders.value.find(o => o.id === row.id)
+      if (order) {
+        order.refundStatus = '商家已同意，等待买家退货'
+        ElMessage.success('已同意退货申请，请等待买家退货')
+      }
+    }).catch(() => {})
+  }
+}
+
+const handleRefundReject = (row) => {
+  const typeText = row.refundType === 'refund' ? '仅退款' : '退货退款'
+  ElMessageBox.prompt(`请输入拒绝${typeText}的原因`, '拒绝申请', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    inputPlaceholder: '请输入拒绝原因',
+    inputValidator: (value) => {
+      if (!value || value.trim() === '') {
+        return '请输入拒绝原因'
+      }
+      return true
+    }
+  }).then(({ value }) => {
+    const order = mockOrders.value.find(o => o.id === row.id)
+    if (order) {
+      order.refundStatus = `商家已拒绝：${value}`
+      ElMessage.success('已拒绝申请')
+    }
+  }).catch(() => {})
+}
+
+const handleRefundApproveFromDetail = () => {
+  if (currentOrder.value) {
+    detailDialogVisible.value = false
+    handleRefundApprove(currentOrder.value)
+  }
+}
+
+const handleRefundRejectFromDetail = () => {
+  if (currentOrder.value) {
+    detailDialogVisible.value = false
+    handleRefundReject(currentOrder.value)
   }
 }
 </script>
@@ -523,12 +688,31 @@ const handleDeleteFromDetail = () => {
           width: 100px;
           color: #8c8c8c;
           font-size: 14px;
+          flex-shrink: 0;
         }
 
         .value {
           flex: 1;
           color: #262626;
           font-size: 14px;
+        }
+
+        .refund-images {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px;
+
+          .refund-image {
+            width: 100px;
+            height: 100px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 1px solid #d9d9d9;
+
+            &:hover {
+              border-color: var(--theme-primary-color);
+            }
+          }
         }
       }
 

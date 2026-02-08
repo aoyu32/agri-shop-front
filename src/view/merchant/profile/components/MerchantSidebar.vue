@@ -18,6 +18,7 @@
         <el-menu-item index="order-pending">待发货</el-menu-item>
         <el-menu-item index="order-shipped">已发货</el-menu-item>
         <el-menu-item index="order-completed">已完成</el-menu-item>
+        <el-menu-item index="order-refund">退货退款</el-menu-item>
         <el-menu-item index="order-all">所有订单</el-menu-item>
       </el-sub-menu>
 
