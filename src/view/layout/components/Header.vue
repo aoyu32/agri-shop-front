@@ -57,7 +57,7 @@
             <span class="icon-text">订单</span>
           </div>
 
-          <div class="icon-item message-item" @click="goToMessages">
+          <div class="icon-item message-item" @click="showMessageDrawer = true">
             <el-badge :value="userStore.unreadMessages" :hidden="userStore.unreadMessages === 0" :max="99">
               <i class="iconfont icon-xiaoxi"></i>
             </el-badge>
@@ -114,6 +114,9 @@
         <el-button type="primary" @click="handleMobileSearch">搜索</el-button>
       </template>
     </el-dialog>
+
+    <!-- 消息抽屉 -->
+    <MessageDrawer v-model="showMessageDrawer" />
   </header>
 </template>
 
@@ -123,6 +126,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { Search } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
+import MessageDrawer from '@/components/message-drawer/index.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -137,6 +141,9 @@ const searchKeyword = ref('')
 // 移动端菜单和搜索状态
 const showMobileMenu = ref(false)
 const showMobileSearch = ref(false)
+
+// 消息抽屉状态
+const showMessageDrawer = ref(false)
 
 // 基础导航菜单
 const baseNavMenus = [
@@ -225,11 +232,6 @@ const goToOrders = () => {
     // 消费者跳转到个人中心的订单页面
     router.push('/profile?menu=order-all')
   }
-}
-
-// 跳转消息
-const goToMessages = () => {
-  ElMessage.info('消息功能开发中')
 }
 
 // 下拉菜单命令处理
