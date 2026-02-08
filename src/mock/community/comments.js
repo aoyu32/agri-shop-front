@@ -7,7 +7,7 @@ export const postComments = {
       author: {
         id: 10,
         name: '种植爱好者',
-        avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face'
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=planter-lover'
       },
       likes: 12,
       createTime: '2024-01-15 11:30:00',
@@ -19,7 +19,7 @@ export const postComments = {
           author: {
             id: 11,
             name: '农场主老刘',
-            avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face'
+            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=farm-liu'
           },
           likes: 3,
           createTime: '2024-01-15 12:15:00',
@@ -33,7 +33,7 @@ export const postComments = {
       author: {
         id: 12,
         name: '新手小农',
-        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face'
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=newbie-farmer'
       },
       likes: 5,
       createTime: '2024-01-15 14:20:00',
@@ -45,7 +45,7 @@ export const postComments = {
           author: {
             id: 1,
             name: '农业专家王老师',
-            avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face'
+            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=expert-wang'
           },
           likes: 8,
           createTime: '2024-01-15 15:00:00',
@@ -59,7 +59,7 @@ export const postComments = {
       author: {
         id: 13,
         name: '城市农夫',
-        avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop&crop=face'
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=city-farmer'
       },
       likes: 7,
       createTime: '2024-01-15 16:45:00',
@@ -74,7 +74,7 @@ export const postComments = {
       author: {
         id: 14,
         name: '菜园新手',
-        avatar: 'https://images.unsplash.com/photo-1507591064344-4c6ce005b128?w=100&h=100&fit=crop&crop=face'
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=garden-newbie'
       },
       likes: 15,
       createTime: '2024-01-14 17:30:00',
@@ -86,7 +86,7 @@ export const postComments = {
           author: {
             id: 2,
             name: '小农夫张三',
-            avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face'
+            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=farmer-zhang'
           },
           likes: 12,
           createTime: '2024-01-14 18:00:00',
@@ -100,7 +100,7 @@ export const postComments = {
       author: {
         id: 15,
         name: '阳台种菜',
-        avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face'
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=balcony-garden'
       },
       likes: 8,
       createTime: '2024-01-14 19:15:00',
@@ -115,7 +115,7 @@ export const postComments = {
       author: {
         id: 16,
         name: '批发商老王',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face'
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=wholesaler-wang'
       },
       likes: 23,
       createTime: '2024-01-13 10:30:00',
@@ -128,7 +128,7 @@ export const postComments = {
       author: {
         id: 17,
         name: '合作社负责人',
-        avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop&crop=face'
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=coop-leader'
       },
       likes: 11,
       createTime: '2024-01-13 11:45:00',
@@ -140,7 +140,7 @@ export const postComments = {
           author: {
             id: 3,
             name: '市场分析师李四',
-            avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop&crop=face'
+            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=analyst-li'
           },
           likes: 15,
           createTime: '2024-01-13 12:20:00',
@@ -156,7 +156,7 @@ export const postComments = {
       author: {
         id: 18,
         name: '老农民',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face'
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=old-farmer'
       },
       likes: 18,
       createTime: '2024-01-12 15:00:00',
@@ -169,7 +169,7 @@ export const postComments = {
       author: {
         id: 19,
         name: '园艺师小李',
-        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face'
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=gardener-li'
       },
       likes: 14,
       createTime: '2024-01-12 16:30:00',
@@ -184,7 +184,7 @@ export const postComments = {
       author: {
         id: 20,
         name: '环保志愿者',
-        avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face'
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=eco-volunteer'
       },
       likes: 16,
       createTime: '2024-01-11 12:30:00',

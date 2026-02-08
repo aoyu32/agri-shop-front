@@ -59,7 +59,7 @@
             <div class="post-footer">
               <div class="post-stats">
                 <span class="stat-item">
-                  <i class="iconfont icon-xianshi"></i>
+                  <i class="iconfont icon-eye"></i>
                   {{ post.views }}
                 </span>
                 <span class="stat-item" :class="{ liked: post.isLiked }" @click.stop="handleLike(post)">
@@ -67,12 +67,8 @@
                   {{ post.likes }}
                 </span>
                 <span class="stat-item">
-                  <i class="iconfont icon-xiaoxi"></i>
+                  <i class="iconfont icon-pinglun"></i>
                   {{ post.comments }}
-                </span>
-                <span class="stat-item" @click.stop="handleShare(post)">
-                  <i class="iconfont icon-gongxiang"></i>
-                  {{ post.shares }}
                 </span>
               </div>
               <div class="post-time">{{ post.createTime }}</div>
@@ -87,7 +83,7 @@
         <div class="user-card">
           <div class="user-header">
             <div class="user-info">
-              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" alt="用户头像" class="user-avatar" />
+              <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=user-xiaowang" alt="用户头像" class="user-avatar" />
               <div class="user-details">
                 <div class="user-name">农户小王</div>
               </div>
@@ -231,7 +227,11 @@ const handleSearch = () => {
 }
 
 const handlePublish = () => {
-  ElMessage.info('发布功能开发中...')
+  router.push('/community/create')
+}
+
+const handleCreatePost = () => {
+  router.push('/community/create')
 }
 
 const handlePostClick = (post) => {

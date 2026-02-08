@@ -1,24 +1,26 @@
 .community-page {
   background-color: var(--app-layout-bg-color);
   min-height: calc(100vh - var(--header-height));
-  
+
   .community-content {
     display: flex;
     gap: 20px;
     max-width: 1400px;
     margin: 0 auto;
-    
+
     .main-content {
       flex: 1;
-      
+
       .category-tabs {
         display: flex;
+        align-items: center;
         background: var(--bg-white);
         border-radius: 8px;
         padding: 4px;
         margin-bottom: 16px;
         box-shadow: var(--box-shadow);
-        
+        gap: 8px;
+
         .tab-item {
           flex: 1;
           text-align: center;
@@ -27,19 +29,19 @@
           cursor: pointer;
           transition: all 0.3s;
           color: var(--text-secondary-color);
-          
+
           &:hover {
             background-color: var(--theme-primary-lighter);
             color: var(--theme-primary-color);
           }
-          
+
           &.active {
             background-color: var(--theme-primary-color);
             color: var(--text-white-color);
           }
         }
       }
-      
+
       .posts-list {
         .post-item {
           background: var(--bg-white);
@@ -49,22 +51,22 @@
           cursor: pointer;
           transition: all 0.3s;
           box-shadow: var(--box-shadow);
-          
+
           &:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
           }
-          
+
           .post-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 16px;
-            
+
             .author-info {
               display: flex;
               align-items: center;
-              
+
               .author-avatar {
                 width: 40px;
                 height: 40px;
@@ -72,7 +74,7 @@
                 margin-right: 12px;
                 object-fit: cover;
               }
-              
+
               .author-details {
                 .author-name {
                   font-weight: 600;
@@ -80,7 +82,7 @@
                 }
               }
             }
-            
+
             .post-category {
               font-size: 12px;
               color: var(--theme-primary-color);
@@ -90,7 +92,7 @@
               white-space: nowrap;
             }
           }
-          
+
           .post-content {
             .post-title {
               font-size: 18px;
@@ -99,26 +101,26 @@
               margin-bottom: 12px;
               line-height: 1.4;
             }
-            
+
             .post-excerpt {
               color: var(--text-secondary-color);
               line-height: 1.6;
               margin-bottom: 16px;
             }
-            
+
             .post-images {
               display: flex;
               gap: 8px;
               margin-bottom: 16px;
               position: relative;
-              
+
               .post-image {
                 width: 120px;
                 height: 80px;
                 border-radius: 6px;
                 object-fit: cover;
               }
-              
+
               .more-images {
                 position: absolute;
                 right: 8px;
@@ -131,17 +133,17 @@
               }
             }
           }
-          
+
           .post-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            
+
             .post-stats {
               display: flex;
               align-items: center;
               gap: 24px;
-              
+
               .stat-item {
                 display: flex;
                 align-items: center;
@@ -150,21 +152,21 @@
                 font-size: 14px;
                 cursor: pointer;
                 transition: color 0.3s;
-                
+
                 &:hover {
                   color: var(--theme-primary-color);
                 }
-                
+
                 &.liked {
                   color: var(--theme-primary-color);
                 }
-                
+
                 .iconfont {
                   font-size: 16px;
                 }
               }
             }
-            
+
             .post-time {
               font-size: 12px;
               color: var(--text-placeholder-color);
@@ -173,30 +175,30 @@
         }
       }
     }
-    
+
     .sidebar {
       width: 360px;
       position: sticky;
       top: calc(var(--header-height) + 20px);
       align-self: flex-start;
-      
+
       .user-card {
         background: var(--bg-white);
         border-radius: 8px;
         padding: 20px;
         margin-bottom: 16px;
         box-shadow: var(--box-shadow);
-        
+
         .user-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
           margin-bottom: 20px;
-          
+
           .user-info {
             display: flex;
             align-items: center;
-            
+
             .user-avatar {
               width: 50px;
               height: 50px;
@@ -204,7 +206,7 @@
               margin-right: 12px;
               object-fit: cover;
             }
-            
+
             .user-details {
               .user-name {
                 font-size: 16px;
@@ -213,33 +215,33 @@
               }
             }
           }
-          
+
           .publish-btn {
             border-radius: 20px;
             padding: 6px 16px;
             font-size: 14px;
-            
+
             .iconfont {
               margin-right: 4px;
             }
           }
         }
-        
+
         .user-stats {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 16px;
-          
+
           .stat-item {
             text-align: center;
-            
+
             .stat-value {
               font-size: 18px;
               font-weight: 600;
               color: var(--text-primary-color);
               margin-bottom: 4px;
             }
-            
+
             .stat-label {
               font-size: 12px;
               color: var(--text-secondary-color);
@@ -247,13 +249,13 @@
           }
         }
       }
-      
+
       .hot-posts {
         background: var(--bg-white);
         border-radius: 8px;
         padding: 20px;
         box-shadow: var(--box-shadow);
-        
+
         .section-title {
           display: flex;
           align-items: center;
@@ -262,30 +264,30 @@
           font-weight: 600;
           color: var(--text-primary-color);
           margin-bottom: 16px;
-          
+
           .iconfont {
             color: var(--theme-warning-color);
           }
         }
-        
+
         .posts-list {
           .hot-post-item {
             padding: 12px 0;
             cursor: pointer;
             transition: all 0.3s;
             border-bottom: 1px solid var(--border-light-color);
-            
+
             &:last-child {
               border-bottom: none;
             }
-            
+
             &:hover {
               background-color: var(--bg-gray);
               margin: 0 -12px;
               padding: 12px;
               border-radius: 4px;
             }
-            
+
             .hot-post-title {
               font-weight: 500;
               color: var(--text-primary-color);
@@ -296,7 +298,7 @@
               -webkit-box-orient: vertical;
               overflow: hidden;
             }
-            
+
             .hot-post-stats {
               display: flex;
               gap: 16px;
@@ -324,33 +326,33 @@
     .community-content {
       flex-direction: column;
       padding: 16px 12px;
-      
+
       .sidebar {
         width: 100%;
         order: -1;
         position: static;
         max-height: none;
-        
+
         .user-card {
           .user-header {
             flex-direction: column;
             align-items: stretch;
             gap: 12px;
-            
+
             .user-info {
               justify-content: center;
             }
           }
-          
+
           .user-stats {
             grid-template-columns: repeat(4, 1fr);
             gap: 8px;
-            
+
             .stat-item {
               .stat-value {
                 font-size: 16px;
               }
-              
+
               .stat-label {
                 font-size: 11px;
               }
@@ -358,7 +360,7 @@
           }
         }
       }
-      
+
       .main-content {
         .category-tabs {
           .tab-item {
@@ -366,11 +368,11 @@
             font-size: 14px;
           }
         }
-        
+
         .posts-list {
           .post-item {
             padding: 16px;
-            
+
             .post-content {
               .post-images {
                 .post-image {

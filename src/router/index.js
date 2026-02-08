@@ -80,6 +80,12 @@ const routes = [
         meta: { title: '社区' }
       },
       {
+        path: 'community/create',
+        name: 'CreatePost',
+        component: () => import('@/view/community/create-post.vue'),
+        meta: { title: '发布帖子', requireAuth: true }
+      },
+      {
         path: 'community/post/:id',
         name: 'PostDetail',
         component: () => import('@/view/community/post-detail.vue'),

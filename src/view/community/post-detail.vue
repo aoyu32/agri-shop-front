@@ -18,16 +18,16 @@
               </div>
               <div class="post-stats">
                 <span class="stat-item">
-                  <i class="iconfont icon-xianshi"></i>
+                  <i class="iconfont icon-eye"></i>
                   {{ post.views }}
                 </span>
                 <span class="stat-item" :class="{ liked: post.isLiked }" @click="handleLike">
                   <i class="iconfont icon-dianzan"></i>
                   {{ post.likes }}
                 </span>
-                <span class="stat-item" @click="handleShare">
-                  <i class="iconfont icon-gongxiang"></i>
-                  {{ post.shares }}
+                  <span class="stat-item">
+                  <i class="iconfont icon-pinglun"></i>
+                  {{ post.comments }}
                 </span>
               </div>
             </div>
@@ -59,10 +59,6 @@
             <el-button @click="handleCollect">
               <i class="iconfont icon-shoucang"></i>
               收藏
-            </el-button>
-            <el-button @click="handleShare">
-              <i class="iconfont icon-gongxiang"></i>
-              分享
             </el-button>
           </div>
         </div>
@@ -107,7 +103,7 @@
                     {{ comment.likes }}
                   </span>
                   <span class="action-btn" @click="replyComment(comment)">
-                    <i class="iconfont icon-xiaoxi"></i>
+                    <i class="iconfont icon-pinglun"></i>
                     回复
                   </span>
                 </div>
@@ -277,7 +273,7 @@ const handleShare = () => {
 }
 
 const handlePublish = () => {
-  ElMessage.info('发布功能开发中...')
+  router.push('/community/create')
 }
 
 const submitComment = () => {

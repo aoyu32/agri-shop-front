@@ -25,7 +25,7 @@ export const communityPosts = [
     author: {
       id: 1,
       name: '农业专家王老师',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face'
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=expert-wang'
     },
     images: [
       'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600&h=400&fit=crop',
@@ -54,7 +54,7 @@ export const communityPosts = [
     author: {
       id: 2,
       name: '小农夫张三',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face'
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=farmer-zhang'
     },
     images: [
       'https://images.unsplash.com/photo-1592841200221-4e2f8d09bac4?w=600&h=400&fit=crop',
@@ -87,7 +87,7 @@ export const communityPosts = [
     author: {
       id: 3,
       name: '市场分析师李四',
-      avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop&crop=face'
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=analyst-li'
     },
     images: [],
     tags: ['市场分析', '价格走势', '农产品'],
@@ -112,7 +112,7 @@ export const communityPosts = [
     author: {
       id: 4,
       name: '新手小白',
-      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face'
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=newbie-xiao'
     },
     images: [
       'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600&h=400&fit=crop'
@@ -150,7 +150,7 @@ export const communityPosts = [
     author: {
       id: 5,
       name: '环保达人王五',
-      avatar: 'https://images.unsplash.com/photo-1507591064344-4c6ce005b128?w=100&h=100&fit=crop&crop=face'
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=eco-wang'
     },
     images: [
       'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600&h=400&fit=crop',
