@@ -235,7 +235,9 @@ const handleCreatePost = () => {
 }
 
 const handlePostClick = (post) => {
-  router.push({ name: 'PostDetail', params: { id: post.id } })
+  // 在新标签页打开帖子详情页
+  const route = router.resolve({ name: 'PostDetail', params: { id: post.id } })
+  window.open(route.href, '_blank')
 }
 
 const handleLike = (post) => {

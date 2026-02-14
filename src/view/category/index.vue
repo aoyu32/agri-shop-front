@@ -125,8 +125,9 @@ const handleReset = () => {
 
 // 产品点击
 const handleProductClick = (product) => {
-  // 跳转到商品详情页
-  router.push({ name: 'ProductDetail', params: { id: product.id } })
+  // 在新标签页打开商品详情页
+  const route = router.resolve({ name: 'ProductDetail', params: { id: product.id } })
+  window.open(route.href, '_blank')
 }
 
 // 分页变化

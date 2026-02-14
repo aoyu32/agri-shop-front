@@ -129,6 +129,7 @@ export const promotionProducts = [
 export const farmerProducts = [
   {
     id: 1,
+    shopId: 1,
     shopName: '老张家农场',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=老张家农场&backgroundColor=b6e3ff',
     rating: 4.9,
@@ -138,6 +139,7 @@ export const farmerProducts = [
   },
   {
     id: 2,
+    shopId: 2,
     shopName: '李大叔果园',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=李大叔果园&backgroundColor=c7f2ff',
     rating: 4.8,
@@ -147,6 +149,7 @@ export const farmerProducts = [
   },
   {
     id: 3,
+    shopId: 1,
     shopName: '王阿姨菜园',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=王阿姨菜园&backgroundColor=ffd5dc',
     rating: 5.0,
@@ -156,6 +159,7 @@ export const farmerProducts = [
   },
   {
     id: 4,
+    shopId: 1,
     shopName: '刘师傅养殖场',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=刘师傅养殖场&backgroundColor=ffdfbf',
     rating: 4.7,
@@ -165,6 +169,7 @@ export const farmerProducts = [
   },
   {
     id: 5,
+    shopId: 2,
     shopName: '陈家水产',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=陈家水产&backgroundColor=b6e3ff',
     rating: 4.9,
@@ -174,6 +179,7 @@ export const farmerProducts = [
   },
   {
     id: 6,
+    shopId: 1,
     shopName: '赵家有机蔬菜',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=赵家有机蔬菜&backgroundColor=d1fae5',
     rating: 4.8,

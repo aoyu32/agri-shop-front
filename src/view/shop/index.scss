@@ -1,0 +1,11 @@
+.shop-page {
+    background: var(--app-layout-bg-color);
+    min-height: calc(100vh - var(--header-height));
+}
+
+.loading-container {
+    min-height: calc(100vh - var(--header-height));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

@@ -11,17 +11,25 @@
         <span>{{ shop.productCount }}商品</span>
       </div>
     </div>
-    <el-button type="primary" plain size="small">进店逛逛</el-button>
+    <el-button type="primary" plain size="small" @click="goToShop">进店逛逛</el-button>
   </div>
 </template>
 
 <script setup>
-defineProps({
+import { useRouter } from 'vue-router'
+
+const props = defineProps({
   shop: {
     type: Object,
     required: true
   }
 })
+
+const router = useRouter()
+
+const goToShop = () => {
+  router.push({ name: 'Shop', params: { id: props.shop.id } })
+}
 </script>
 
 <style lang="scss" scoped>

@@ -67,7 +67,7 @@
       <ProductList
         title="农户推荐"
         :products="farmerProducts"
-        @click="handleProductClick"
+        @click="handleFarmerClick"
       >
         <template #default="{ item }">
           <div class="farmer-avatar">
@@ -144,8 +144,15 @@ const displayProducts = ref(productCards)
 
 // 事件处理
 const handleProductClick = (product) => {
-  // 跳转到商品详情页
-  router.push({ name: 'ProductDetail', params: { id: product.id } })
+  // 在新标签页打开商品详情页
+  const route = router.resolve({ name: 'ProductDetail', params: { id: product.id } })
+  window.open(route.href, '_blank')
+}
+
+const handleFarmerClick = (farmer) => {
+  // 在新标签页打开店铺页面
+  const route = router.resolve({ name: 'Shop', params: { id: farmer.shopId } })
+  window.open(route.href, '_blank')
 }
 
 const handleCategoryChange = (category) => {

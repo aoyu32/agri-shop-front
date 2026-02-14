@@ -349,7 +349,9 @@ const previewImage = (images, index) => {
 }
 
 const goToPost = (postId) => {
-  router.push({ name: 'PostDetail', params: { id: postId } })
+  // 在新标签页打开帖子详情页
+  const route = router.resolve({ name: 'PostDetail', params: { id: postId } })
+  window.open(route.href, '_blank')
 }
 </script>
 

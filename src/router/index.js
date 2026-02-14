@@ -104,6 +104,12 @@ const routes = [
         meta: { title: '商品详情' }
       },
       {
+        path: 'shop/:id',
+        name: 'Shop',
+        component: () => import('@/view/shop/index.vue'),
+        meta: { title: '店铺主页' }
+      },
+      {
         path: 'profile',
         name: 'Profile',
         component: () => import('@/view/profile/index.vue'),
