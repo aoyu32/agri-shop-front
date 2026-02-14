@@ -95,7 +95,7 @@ const routes = [
         path: 'market-forecast',
         name: 'MarketForecast',
         component: () => import('@/view/market-forecast/index.vue'),
-        meta: { title: '行情预测', requireMerchant: true }
+        meta: { title: '行情预测', requireAuth: true, requireRole: USER_ROLES.MERCHANT }
       },
       {
         path: 'product/:id',
