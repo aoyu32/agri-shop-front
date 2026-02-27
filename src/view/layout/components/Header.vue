@@ -222,11 +222,11 @@ const goToCart = () => {
 // 跳转订单
 const goToOrders = () => {
   if (userStore.isMerchant) {
-    // 农户跳转到商家管理后台的全部订单
-    router.push('/merchant/profile?menu=order-all')
+    // 农户跳转到商家管理后台的待付款订单
+    router.push('/merchant/profile?menu=order-pending')
   } else {
-    // 消费者跳转到个人中心的订单页面
-    router.push('/profile?menu=order-all')
+    // 消费者跳转到个人中心的待付款订单
+    router.push('/profile?menu=order-pending')
   }
 }
 

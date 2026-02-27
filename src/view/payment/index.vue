@@ -91,7 +91,7 @@
       </div>
       <template #footer>
         <el-button @click="qrcodeDialogVisible = false">取消支付</el-button>
-        <el-button type="success" @click="handlePaySuccess">已完成支付</el-button>
+        <el-button type="success" :loading="paying" @click="handlePaySuccess">已完成支付</el-button>
       </template>
     </el-dialog>
   </div>
@@ -101,29 +101,64 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { getOrderDetail, payOrder } from '@/apis/order'
 
 const route = useRoute()
 const router = useRouter()
 
+const orderId = ref(null)
 const orderNo = ref('')
 const amount = ref('0.00')
 const products = ref([])
 const qrcodeDialogVisible = ref(false)
+const loading = ref(false)
+const paying = ref(false)
+
+// 获取订单详情
+const fetchOrderDetail = async (id) => {
+  try {
+    loading.value = true
+    const res = await getOrderDetail(id)
+    const order = res.data.order
+    
+    orderId.value = order.id
+    orderNo.value = order.order_no
+    amount.value = order.actual_amount
+    products.value = order.items.map(item => ({
+      id: item.product_id,
+      name: item.product_name,
+      spec: item.spec_label || '默认',
+      price: item.price,
+      quantity: item.quantity,
+      image: item.product_image
+    }))
+  } catch (error) {
+    ElMessage.error(error.message || '获取订单信息失败')
+    router.back()
+  } finally {
+    loading.value = false
+  }
+}
 
 onMounted(() => {
-  orderNo.value = route.query.orderNo || ''
-  amount.value = route.query.amount || '0.00'
+  const id = route.query.order_id
   
-  // 从 query 中获取商品信息
-  if (route.query.products) {
-    try {
-      products.value = JSON.parse(decodeURIComponent(route.query.products))
-    } catch (e) {
-      console.error('解析商品信息失败', e)
+  if (id) {
+    // 通过 order_id 获取订单详情
+    fetchOrderDetail(parseInt(id))
+  } else if (route.query.orderNo) {
+    // 兼容旧的传参方式
+    orderNo.value = route.query.orderNo
+    amount.value = route.query.amount || '0.00'
+    
+    if (route.query.products) {
+      try {
+        products.value = JSON.parse(decodeURIComponent(route.query.products))
+      } catch (e) {
+        console.error('解析商品信息失败', e)
+      }
     }
-  }
-
-  if (!orderNo.value) {
+  } else {
     ElMessage.error('订单信息错误')
     router.back()
   }
@@ -137,12 +172,30 @@ const handlePay = () => {
   qrcodeDialogVisible.value = true
 }
 
-const handlePaySuccess = () => {
-  qrcodeDialogVisible.value = false
-  ElMessage.success('支付成功！')
-  setTimeout(() => {
-    router.push('/profile?menu=order-paid')
-  }, 1500)
+const handlePaySuccess = async () => {
+  if (!orderId.value) {
+    ElMessage.error('订单信息错误')
+    return
+  }
+
+  try {
+    paying.value = true
+    await payOrder({
+      id: orderId.value,
+      payment_method: 'alipay'
+    })
+    
+    qrcodeDialogVisible.value = false
+    ElMessage.success('支付成功！')
+    
+    setTimeout(() => {
+      router.replace('/profile?menu=order-paid')
+    }, 1500)
+  } catch (error) {
+    ElMessage.error(error.message || '支付失败')
+  } finally {
+    paying.value = false
+  }
 }
 </script>
 

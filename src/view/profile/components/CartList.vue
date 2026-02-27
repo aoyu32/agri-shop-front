@@ -212,17 +212,20 @@ const handleCheckout = () => {
   }
   
   const checkedItems = cartItems.value.filter(item => item.checked)
-  // 跳转到支付页面，传递选中的商品
+  const cartIds = checkedItems.map(item => item.id)
+  
+  console.log('跳转到订单确认页面:', {
+    checkedItems,
+    cartIds,
+    path: '/order/confirm',
+    query: { cart_ids: cartIds.join(',') }
+  })
+  
+  // 跳转到订单确认页面
   router.push({
-    path: '/payment',
+    path: '/order/confirm',
     query: {
-      from: 'cart',
-      items: JSON.stringify(checkedItems.map(item => ({
-        id: item.id,
-        productId: item.productId,
-        specId: item.specId,
-        quantity: item.quantity
-      })))
+      cart_ids: cartIds.join(',')
     }
   })
 }
