@@ -109,3 +109,18 @@ export function getOrigins() {
         method: 'get'
     })
 }
+
+/**
+ * 获取推荐商品
+ * @param {Object} params - 参数
+ * @param {number} params.category_id - 分类ID（可选）
+ * @param {number} params.exclude_id - 排除的商品ID（可选）
+ * @param {number} params.limit - 数量限制
+ */
+export function getRecommendProducts(params) {
+    return request({
+        url: '/api/product/recommend',
+        method: 'get',
+        params
+    })
+}

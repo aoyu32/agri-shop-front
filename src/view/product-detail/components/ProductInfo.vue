@@ -64,8 +64,13 @@
     <!-- 数量选择 -->
     <div class="quantity-section">
       <span class="quantity-label">数量</span>
-      <el-input-number v-model="quantity" :min="1" :max="product.stock" size="large" />
-      <span class="stock-info">库存 {{ product.stock }} 件</span>
+      <el-input-number 
+        v-model="quantity" 
+        :min="1" 
+        :max="Math.max(1, product.stock || 1)" 
+        size="large" 
+      />
+      <span class="stock-info">库存 {{ product.stock || 0 }} 件</span>
     </div>
 
     <!-- 操作按钮 -->
