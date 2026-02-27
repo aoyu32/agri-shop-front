@@ -66,6 +66,11 @@ export const useUserStore = defineStore('user', () => {
       // 保存用户信息
       setUserInfo(res.data.user)
 
+      // 如果是消费者，获取购物车数量
+      if (res.data.user.role === USER_ROLES.CONSUMER) {
+        fetchCartCount()
+      }
+
       return res
     } catch (error) {
       console.error('登录失败:', error)
@@ -78,12 +83,29 @@ export const useUserStore = defineStore('user', () => {
     try {
       const res = await getUserInfoApi()
       setUserInfo(res.data.user)
+
+      // 如果是消费者，获取购物车数量
+      if (res.data.user.role === USER_ROLES.CONSUMER) {
+        fetchCartCount()
+      }
+
       return res
     } catch (error) {
       console.error('获取用户信息失败:', error)
       // 如果获取失败，清除本地数据
       logout()
       throw error
+    }
+  }
+
+  // 获取购物车数量
+  const fetchCartCount = async () => {
+    try {
+      const { getCartCount } = await import('@/apis/cart')
+      const res = await getCartCount()
+      cartCount.value = res.data.count
+    } catch (error) {
+      console.error('获取购物车数量失败:', error)
     }
   }
 
@@ -160,6 +182,7 @@ export const useUserStore = defineStore('user', () => {
     logout,
     initUserInfo,
     setUnreadMessages,
-    setCartCount
+    setCartCount,
+    fetchCartCount
   }
 })

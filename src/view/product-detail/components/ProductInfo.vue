@@ -76,9 +76,6 @@
     <!-- 操作按钮 -->
     <div class="action-buttons">
       <el-button type="primary" size="large" @click="handleAddToCart">
-        <el-icon>
-          <ShoppingCart />
-        </el-icon>
         加入购物车
       </el-button>
       <el-button type="danger" size="large" @click="handleBuyNow">
@@ -158,7 +155,6 @@ const handleAddToCart = () => {
     specs: selectedSpecs.value,
     quantity: quantity.value
   })
-  ElMessage.success('已加入购物车')
 }
 
 // 立即购买

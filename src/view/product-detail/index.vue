@@ -61,6 +61,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { useUserStore } from '@/store/modules/user'
 import ShopInfo from './components/ShopInfo.vue'
 import ProductImages from './components/ProductImages.vue'
 import ProductInfo from './components/ProductInfo.vue'
@@ -70,6 +71,7 @@ import { getProductDetail, getRecommendProducts } from '@/apis/product'
 
 const route = useRoute()
 const router = useRouter()
+const userStore = useUserStore()
 
 // 商品详情数据
 const product = ref({
@@ -208,10 +210,43 @@ onMounted(() => {
 })
 
 // 加入购物车
-const handleAddToCart = (data) => {
-  console.log('加入购物车:', data)
-  ElMessage.success('已加入购物车')
-  // TODO: 调用购物车API
+const handleAddToCart = async (data) => {
+  try {
+    // 从选中的规格中找到对应的 spec_id
+    let specId = null
+    if (data.specs && Object.keys(data.specs).length > 0) {
+      // data.specs 格式：{规格名: {id: 33, label: "3斤装", price: -8, stock: 350}}
+      const specName = Object.keys(data.specs)[0]
+      const selectedSpec = data.specs[specName]
+      
+      // 如果选中的规格是对象且包含 id，直接使用
+      if (selectedSpec && typeof selectedSpec === 'object' && selectedSpec.id) {
+        specId = selectedSpec.id
+      }
+    }
+
+    console.log('添加到购物车:', {
+      product_id: product.value.id,
+      spec_id: specId,
+      quantity: data.quantity,
+      selectedSpecs: data.specs
+    })
+
+    const { addToCart } = await import('@/apis/cart')
+    await addToCart({
+      product_id: product.value.id,
+      spec_id: specId,
+      quantity: data.quantity
+    })
+    ElMessage.success('已加入购物车')
+    
+    // 更新购物车数量
+    const { getCartCount } = await import('@/apis/cart')
+    const res = await getCartCount()
+    userStore.setCartCount(res.data.count)
+  } catch (error) {
+    ElMessage.error(error.message || '加入购物车失败')
+  }
 }
 
 // 立即购买

@@ -15,17 +15,21 @@
 
     <div v-else class="cart-items">
       <div v-for="item in cartItems" :key="item.id" class="cart-item">
-        <el-checkbox v-model="item.checked" @change="handleCheckChange" />
+        <el-checkbox v-model="item.checked" @change="handleCheckChange(item)" />
         <img :src="item.image" :alt="item.name" class="item-image" />
         <div class="item-info">
           <div class="item-name">{{ item.name }}</div>
           <div class="item-spec">{{ item.spec }}</div>
+          <div class="item-shop">
+            <i class="iconfont icon-dianpu"></i>
+            {{ item.shopName }}
+          </div>
         </div>
         <div class="item-price">¥{{ item.price }}</div>
         <el-input-number
           v-model="item.quantity"
           :min="1"
-          :max="99"
+          :max="item.stock"
           size="small"
           @change="handleQuantityChange(item)"
         />
@@ -48,48 +52,37 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useUserStore } from '@/store/modules/user'
+import {
+  getCartList,
+  updateCartQuantity,
+  toggleCartCheck,
+  checkAllCart,
+  deleteCartItems,
+  clearCart
+} from '@/apis/cart'
 
 const router = useRouter()
+const userStore = useUserStore()
 
 // 购物车数据
-const cartItems = ref([
-  {
-    id: 1,
-    name: '新鲜有机西红柿',
-    spec: '500g/份',
-    price: 12.8,
-    quantity: 2,
-    image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=200&h=200&fit=crop',
-    checked: false
-  },
-  {
-    id: 2,
-    name: '农家土鸡蛋',
-    spec: '30枚/盒',
-    price: 45.0,
-    quantity: 1,
-    image: 'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=200&h=200&fit=crop',
-    checked: false
-  },
-  {
-    id: 3,
-    name: '新鲜黄瓜',
-    spec: '1kg/份',
-    price: 8.5,
-    quantity: 3,
-    image: 'https://images.unsplash.com/photo-1604977042946-1eecc30f269e?w=200&h=200&fit=crop',
-    checked: false
-  }
-])
+const cartItems = ref([])
+const loading = ref(false)
 
 // 全选状态
 const allChecked = computed({
   get: () => cartItems.value.length > 0 && cartItems.value.every(item => item.checked),
-  set: (val) => {
-    cartItems.value.forEach(item => item.checked = val)
+  set: async (val) => {
+    try {
+      await checkAllCart({ checked: val ? 1 : 0 })
+      cartItems.value.forEach(item => item.checked = val)
+      updateCartCount()
+    } catch (error) {
+      ElMessage.error(error.message || '操作失败')
+    }
   }
 })
 
@@ -106,54 +99,143 @@ const totalPrice = computed(() => {
     .toFixed(2)
 })
 
-const handleCheckChange = () => {
-  // 选中状态变化
+// 获取购物车列表
+const fetchCartList = async () => {
+  try {
+    loading.value = true
+    const res = await getCartList()
+    cartItems.value = res.data.list.map(item => ({
+      id: item.id,
+      name: item.product_name,
+      spec: item.spec_label,
+      price: item.price,
+      quantity: item.quantity,
+      image: item.product_image,
+      checked: item.checked === 1,
+      stock: item.stock,
+      productId: item.product_id,
+      specId: item.spec_id,
+      shopName: item.shop_name,
+      tags: item.tags
+    }))
+    updateCartCount()
+  } catch (error) {
+    ElMessage.error(error.message || '获取购物车失败')
+  } finally {
+    loading.value = false
+  }
 }
 
+// 更新购物车数量（在 store 中）
+const updateCartCount = () => {
+  userStore.setCartCount(cartItems.value.length)
+}
+
+// 选中状态变化
+const handleCheckChange = async (item) => {
+  try {
+    await toggleCartCheck({
+      cart_id: item.id,
+      checked: item.checked ? 1 : 0
+    })
+    updateCartCount()
+  } catch (error) {
+    item.checked = !item.checked
+    ElMessage.error(error.message || '操作失败')
+  }
+}
+
+// 全选/取消全选
 const handleCheckAll = () => {
-  // 全选/取消全选
+  // 由 computed setter 处理
 }
 
-const handleQuantityChange = (item) => {
-  ElMessage.success(`已更新 ${item.name} 的数量`)
+// 数量变化
+const handleQuantityChange = async (item) => {
+  try {
+    await updateCartQuantity({
+      cart_id: item.id,
+      quantity: item.quantity
+    })
+    ElMessage.success('已更新数量')
+  } catch (error) {
+    ElMessage.error(error.message || '更新失败')
+    // 重新获取列表以恢复正确的数量
+    fetchCartList()
+  }
 }
 
+// 删除商品
 const handleRemove = (item) => {
   ElMessageBox.confirm('确定要删除该商品吗？', '提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
-  }).then(() => {
-    const index = cartItems.value.findIndex(i => i.id === item.id)
-    if (index > -1) {
-      cartItems.value.splice(index, 1)
+  }).then(async () => {
+    try {
+      await deleteCartItems({ cart_ids: [item.id] })
+      const index = cartItems.value.findIndex(i => i.id === item.id)
+      if (index > -1) {
+        cartItems.value.splice(index, 1)
+      }
+      updateCartCount()
       ElMessage.success('删除成功')
+    } catch (error) {
+      ElMessage.error(error.message || '删除失败')
     }
   }).catch(() => {})
 }
 
+// 清空购物车
 const handleClearCart = () => {
   ElMessageBox.confirm('确定要清空购物车吗？', '提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
-  }).then(() => {
-    cartItems.value = []
-    ElMessage.success('购物车已清空')
+  }).then(async () => {
+    try {
+      await clearCart()
+      cartItems.value = []
+      updateCartCount()
+      ElMessage.success('购物车已清空')
+    } catch (error) {
+      ElMessage.error(error.message || '清空失败')
+    }
   }).catch(() => {})
 }
 
+// 去结算
 const handleCheckout = () => {
   if (checkedCount.value === 0) {
     ElMessage.warning('请选择要结算的商品')
     return
   }
-  ElMessage.success('跳转到结算页面')
+  
+  const checkedItems = cartItems.value.filter(item => item.checked)
+  // 跳转到支付页面，传递选中的商品
+  router.push({
+    path: '/payment',
+    query: {
+      from: 'cart',
+      items: JSON.stringify(checkedItems.map(item => ({
+        id: item.id,
+        productId: item.productId,
+        specId: item.specId,
+        quantity: item.quantity
+      })))
+    }
+  })
 }
 
+// 去逛逛
 const goShopping = () => {
   router.push('/home')
 }
+
+// 组件挂载时获取数据
+onMounted(() => {
+  fetchCartList()
+})
 </script>
 
 <style lang="scss" scoped>
@@ -239,6 +321,19 @@ const goShopping = () => {
         .item-spec {
           font-size: 13px;
           color: var(--text-secondary-color);
+          margin-bottom: 4px;
+        }
+
+        .item-shop {
+          font-size: 12px;
+          color: var(--text-placeholder-color);
+          display: flex;
+          align-items: center;
+          gap: 4px;
+
+          i {
+            font-size: 12px;
+          }
         }
       }
 

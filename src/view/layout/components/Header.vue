@@ -46,7 +46,7 @@
         <!-- 已登录状态 -->
         <div v-else class="user-info">
           <div v-if="userStore.isConsumer" class="icon-item cart-item" @click="goToCart">
-            <el-badge :value="100" :hidden="userStore.cartCount === 0" :max="99">
+            <el-badge :value="userStore.cartCount" :hidden="userStore.cartCount === 0" :max="99">
               <i class="iconfont icon-gouwuche"></i>
             </el-badge>
             <span class="icon-text">购物车</span>
