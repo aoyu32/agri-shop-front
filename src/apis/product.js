@@ -80,3 +80,32 @@ export function searchProducts(params) {
         params
     })
 }
+
+/**
+ * 高级筛选商品
+ * @param {Object} params - 筛选参数
+ * @param {number} params.category_id - 分类ID
+ * @param {number} params.min_price - 最低价格
+ * @param {number} params.max_price - 最高价格
+ * @param {string} params.origin - 产地
+ * @param {string} params.sort_by - 排序方式 (default, sales, price_asc, price_desc, newest)
+ * @param {number} params.page - 页码
+ * @param {number} params.page_size - 每页数量
+ */
+export function filterProducts(params) {
+    return request({
+        url: '/api/product/filter',
+        method: 'get',
+        params
+    })
+}
+
+/**
+ * 获取产地列表
+ */
+export function getOrigins() {
+    return request({
+        url: '/api/product/origins',
+        method: 'get'
+    })
+}

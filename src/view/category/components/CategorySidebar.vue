@@ -16,8 +16,11 @@
           <span>{{ category.name }}</span>
           <i class="iconfont icon-arrow-right arrow"></i>
         </div>
-        <!-- 二级分类 -->
-        <div v-if="selectedCategory?.id === category.id" class="sub-category-list">
+        <!-- 二级分类（仅当有子分类时显示） -->
+        <div 
+          v-if="selectedCategory?.id === category.id && category.children && category.children.length > 0" 
+          class="sub-category-list"
+        >
           <div
             v-for="sub in category.children"
             :key="sub.id"
