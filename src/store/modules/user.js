@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { login as loginApi, getUserInfo as getUserInfoApi, logout as logoutApi } from '@/apis/auth'
+import { ElMessage } from 'element-plus'
 
 // 用户角色常量
 export const USER_ROLES = {
@@ -14,15 +16,22 @@ export const useUserStore = defineStore('user', () => {
     id: null,
     username: '',
     avatar: '',
+    phone: '',
+    nickname: '',
+    address: '',
+    bio: '',
     role: USER_ROLES.CONSUMER,
     isLogin: false
   })
 
+  // Token
+  const token = ref(localStorage.getItem('token') || '')
+
   // 未读消息数
-  const unreadMessages = ref(100)
+  const unreadMessages = ref(0)
 
   // 购物车数量
-  const cartCount = ref(100)
+  const cartCount = ref(0)
 
   // 计算属性：是否是商户
   const isMerchant = computed(() => userInfo.value.role === USER_ROLES.MERCHANT)
@@ -36,19 +45,94 @@ export const useUserStore = defineStore('user', () => {
   // 设置用户信息
   const setUserInfo = (info) => {
     userInfo.value = { ...userInfo.value, ...info, isLogin: true }
+    // 保存到 localStorage
+    localStorage.setItem('userInfo', JSON.stringify(userInfo.value))
+  }
+
+  // 设置 Token
+  const setToken = (newToken) => {
+    token.value = newToken
+    localStorage.setItem('token', newToken)
+  }
+
+  // 登录
+  const login = async (loginData) => {
+    try {
+      const res = await loginApi(loginData)
+
+      // 保存 token
+      setToken(res.data.token)
+
+      // 保存用户信息
+      setUserInfo(res.data.user)
+
+      return res
+    } catch (error) {
+      console.error('登录失败:', error)
+      throw error
+    }
+  }
+
+  // 获取用户信息
+  const getUserInfo = async () => {
+    try {
+      const res = await getUserInfoApi()
+      setUserInfo(res.data.user)
+      return res
+    } catch (error) {
+      console.error('获取用户信息失败:', error)
+      // 如果获取失败，清除本地数据
+      logout()
+      throw error
+    }
   }
 
   // 登出
-  const logout = () => {
-    userInfo.value = {
-      id: null,
-      username: '',
-      avatar: '',
-      role: USER_ROLES.CONSUMER,
-      isLogin: false
+  const logout = async () => {
+    try {
+      if (token.value) {
+        await logoutApi()
+      }
+    } catch (error) {
+      console.error('登出失败:', error)
+    } finally {
+      // 清除本地数据
+      userInfo.value = {
+        id: null,
+        username: '',
+        avatar: '',
+        phone: '',
+        nickname: '',
+        address: '',
+        bio: '',
+        role: USER_ROLES.CONSUMER,
+        isLogin: false
+      }
+      token.value = ''
+      unreadMessages.value = 0
+      cartCount.value = 0
+
+      localStorage.removeItem('token')
+      localStorage.removeItem('userInfo')
     }
-    unreadMessages.value = 0
-    cartCount.value = 0
+  }
+
+  // 初始化用户信息（从 localStorage 恢复）
+  const initUserInfo = () => {
+    const savedUserInfo = localStorage.getItem('userInfo')
+    if (savedUserInfo && token.value) {
+      try {
+        userInfo.value = JSON.parse(savedUserInfo)
+        // 验证 token 是否有效，获取最新用户信息
+        getUserInfo().catch(() => {
+          // 如果获取失败，清除本地数据
+          logout()
+        })
+      } catch (error) {
+        console.error('解析用户信息失败:', error)
+        logout()
+      }
+    }
   }
 
   // 更新未读消息数
@@ -61,40 +145,21 @@ export const useUserStore = defineStore('user', () => {
     cartCount.value = count
   }
 
-  // 模拟登录（开发用）
-  const mockLogin = (role = USER_ROLES.CONSUMER) => {
-    const mockData = {
-      [USER_ROLES.CONSUMER]: {
-        id: 1,
-        username: '张三',
-        avatar: 'https://i.pravatar.cc/150?img=1',
-        role: USER_ROLES.CONSUMER
-      },
-      [USER_ROLES.MERCHANT]: {
-        id: 2,
-        username: '李四商户',
-        avatar: 'https://i.pravatar.cc/150?img=13',
-        role: USER_ROLES.MERCHANT
-      }
-    }
-    setUserInfo(mockData[role])
-    if (role === USER_ROLES.CONSUMER) {
-      setCartCount(3)
-    }
-    setUnreadMessages(5)
-  }
-
   return {
     userInfo,
+    token,
     unreadMessages,
     cartCount,
     isMerchant,
     isConsumer,
     isAdmin,
     setUserInfo,
+    setToken,
+    login,
+    getUserInfo,
     logout,
+    initUserInfo,
     setUnreadMessages,
-    setCartCount,
-    mockLogin
+    setCartCount
   }
 })

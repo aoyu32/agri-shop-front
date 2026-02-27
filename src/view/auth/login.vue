@@ -136,39 +136,22 @@ const handleLogin = async () => {
     await loginFormRef.value.validate()
     loading.value = true
 
-    // 模拟登录API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    // 模拟登录成功
-    const mockUserData = {
-      [USER_ROLES.CONSUMER]: {
-        id: 1,
-        username: loginForm.username,
-        avatar: 'https://i.pravatar.cc/150?img=1',
-        role: USER_ROLES.CONSUMER
-      },
-      [USER_ROLES.MERCHANT]: {
-        id: 2,
-        username: loginForm.username,
-        avatar: 'https://i.pravatar.cc/150?img=13',
-        role: USER_ROLES.MERCHANT
-      }
-    }
-
-    userStore.setUserInfo(mockUserData[selectedRole.value])
-    
-    if (selectedRole.value === USER_ROLES.CONSUMER) {
-      userStore.setCartCount(3)
-    }
-    userStore.setUnreadMessages(5)
+    // 调用登录 API，传递期望的角色
+    await userStore.login({
+      username: loginForm.username,
+      password: loginForm.password,
+      remember: loginForm.remember,
+      role: selectedRole.value  // 传递当前选择的角色
+    })
 
     ElMessage.success('登录成功')
 
-    // 所有角色登录后都跳转到首页，首页会根据角色显示不同内容
+    // 根据角色跳转
     router.push('/home')
   } catch (error) {
     if (error !== false) {
-      ElMessage.error('登录失败，请检查输入')
+      // API 错误已经在 request.js 中处理，这里不需要再显示
+      console.error('登录失败:', error)
     }
   } finally {
     loading.value = false

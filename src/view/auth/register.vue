@@ -137,6 +137,7 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { USER_ROLES } from '@/store/modules/user'
+import { sendCode, register } from '@/apis/auth'
 
 const router = useRouter()
 
@@ -230,16 +231,26 @@ const handleSendCode = async () => {
     return
   }
 
-  // 模拟发送验证码
-  ElMessage.success('验证码已发送')
-  countdown.value = 60
-
-  const timer = setInterval(() => {
-    countdown.value--
-    if (countdown.value <= 0) {
-      clearInterval(timer)
+  try {
+    const res = await sendCode(registerForm.phone)
+    ElMessage.success(res.message || '验证码已发送')
+    
+    // 开发环境显示验证码
+    if (res.data?.code) {
+      console.log('验证码:', res.data.code)
+      ElMessage.info(`验证码: ${res.data.code}（开发环境）`)
     }
-  }, 1000)
+    
+    countdown.value = 60
+    const timer = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) {
+        clearInterval(timer)
+      }
+    }, 1000)
+  } catch (error) {
+    console.error('发送验证码失败:', error)
+  }
 }
 
 // 注册处理
@@ -250,14 +261,21 @@ const handleRegister = async () => {
     await registerFormRef.value.validate()
     loading.value = true
 
-    // 模拟注册API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // 调用注册 API
+    await register({
+      username: registerForm.username,
+      phone: registerForm.phone,
+      code: registerForm.code,
+      password: registerForm.password,
+      confirm_password: registerForm.confirmPassword,
+      role: selectedRole.value
+    })
 
     ElMessage.success('注册成功，请登录')
     router.push('/auth/login')
   } catch (error) {
     if (error !== false) {
-      ElMessage.error('注册失败，请检查输入')
+      console.error('注册失败:', error)
     }
   } finally {
     loading.value = false

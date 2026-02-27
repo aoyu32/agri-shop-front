@@ -9,14 +9,14 @@
           <div class="user-meta">
             <div class="meta-item">
               <i class="iconfont icon-shouji"></i>
-              <span>{{ userInfo.phone }}</span>
+              <span>{{ userStore.userInfo.phone }}</span>
             </div>
             <div class="meta-item">
               <i class="iconfont icon-didian"></i>
-              <span>{{ userInfo.city }}</span>
+              <span>{{ userStore.userInfo.address || '未填写' }}</span>
             </div>
           </div>
-          <div class="user-bio">{{ userInfo.bio }}</div>
+          <div class="user-bio">{{ userStore.userInfo.bio || '这位用户很懒，还没有填写简介' }}</div>
         </div>
       </div>
       <div class="header-right">
@@ -72,13 +72,6 @@ import SecuritySettings from './components/SecuritySettings.vue'
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
-
-// 用户详细信息
-const userInfo = ref({
-  phone: '138****0001',
-  city: '北京市 朝阳区',
-  bio: '热爱生活，喜欢购买新鲜的农产品，支持绿色健康的生活方式。'
-})
 
 // 用户统计数据
 const stats = ref({
