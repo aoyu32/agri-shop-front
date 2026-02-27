@@ -67,7 +67,7 @@ import { ArrowLeft, ArrowRight } from '@element-plus/icons-vue'
 import SearchBox from './components/SearchBox.vue'
 import SearchFilter from './components/SearchFilter.vue'
 import ProductCard from '@/components/product-card/index.vue'
-import { searchProducts } from '@/mock/search/search-results'
+import { searchProducts } from '@/apis/product'
 
 const route = useRoute()
 const router = useRouter()
@@ -75,15 +75,14 @@ const router = useRouter()
 // 搜索参数
 const searchKeyword = ref('')
 const currentSearchKeyword = ref('')
-const sortBy = ref('default')
+const sortBy = ref('sales')
 const currentPage = ref(1)
-const pageSize = ref(10)
+const pageSize = ref(20)
 const hasSearched = ref(false)
 
 // 数据
 const products = ref([])
 const total = ref(0)
-const totalPages = ref(0)
 const loading = ref(false)
 
 // 静态数据
@@ -91,32 +90,48 @@ const sortOptions = [
   { label: '销量优先', value: 'sales' },
   { label: '价格升序', value: 'price_asc' },
   { label: '价格降序', value: 'price_desc' },
-  { label: '评分优先', value: 'rating' },
   { label: '最新上架', value: 'newest' }
 ]
 
 // 执行搜索
 const performSearch = async () => {
+  if (!searchKeyword.value.trim()) {
+    ElMessage.warning('请输入搜索关键词')
+    return
+  }
+
   loading.value = true
   hasSearched.value = true
   currentSearchKeyword.value = searchKeyword.value
   
   try {
-    // 模拟API延迟
-    await new Promise(resolve => setTimeout(resolve, 300))
-    
     const params = {
       keyword: searchKeyword.value,
-      sortBy: sortBy.value,
+      sort_by: sortBy.value,
       page: currentPage.value,
-      pageSize: pageSize.value
+      page_size: pageSize.value
     }
     
-    const result = searchProducts(params)
+    const res = await searchProducts(params)
     
-    products.value = result.results
-    total.value = result.total
-    totalPages.value = result.totalPages
+    if (res.code === 200) {
+      products.value = res.data.list.map(item => ({
+        id: item.id,
+        name: item.name,
+        description: item.subtitle,
+        image: item.main_image,
+        price: item.price,
+        originalPrice: item.original_price,
+        unit: item.unit,
+        sales: item.sales,
+        origin: item.origin,
+        shopName: item.shop?.shop_name || '未知店铺',
+        tags: item.tags?.map(tag => tag.tag_name) || []
+      }))
+      total.value = res.data.total
+    } else {
+      ElMessage.error(res.message || '搜索失败')
+    }
     
     // 更新URL参数
     updateUrlParams()
@@ -134,7 +149,7 @@ const updateUrlParams = () => {
   const query = {}
   
   if (searchKeyword.value) query.q = searchKeyword.value
-  if (sortBy.value !== 'default') query.sort = sortBy.value
+  if (sortBy.value !== 'sales') query.sort = sortBy.value
   if (currentPage.value > 1) query.page = currentPage.value
   
   router.replace({ query })
@@ -145,7 +160,7 @@ const initFromUrlParams = () => {
   const query = route.query
   
   searchKeyword.value = query.q || ''
-  sortBy.value = query.sort || 'default'
+  sortBy.value = query.sort || 'sales'
   currentPage.value = parseInt(query.page) || 1
   
   // 如果有搜索参数，标记为已搜索
@@ -184,10 +199,8 @@ const handlePageChange = (page) => {
 }
 
 const handleReset = () => {
-  sortBy.value = 'default'
+  sortBy.value = 'sales'
   currentPage.value = 1
-  // 不清空搜索关键词，保持搜索状态
-  // 重新执行搜索，使用默认排序
   performSearch()
 }
 
