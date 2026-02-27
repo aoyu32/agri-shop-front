@@ -181,10 +181,42 @@
         margin-bottom: 24px;
     }
 
+    .products-grid-wrapper {
+        min-height: 400px;
+    }
+
     .products-grid {
         display: grid;
         grid-template-columns: repeat(5, 1fr);
         gap: 20px;
+    }
+
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 80px 20px;
+        background-color: var(--bg-white);
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+        .empty-icon {
+            margin-bottom: 24px;
+            opacity: 0.8;
+        }
+
+        .empty-text {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--text-primary-color);
+            margin-bottom: 8px;
+        }
+
+        .empty-desc {
+            font-size: 14px;
+            color: var(--text-secondary-color);
+        }
     }
 
     // 响应式适配
