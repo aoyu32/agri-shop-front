@@ -30,16 +30,16 @@
         </div>
       </el-form-item>
 
-      <el-form-item label="用户名" prop="username">
-        <el-input v-model="form.username" placeholder="请输入用户名" />
+      <el-form-item label="昵称" prop="nickname">
+        <el-input v-model="form.nickname" placeholder="请输入昵称" />
       </el-form-item>
 
       <el-form-item label="手机号">
         <el-input v-model="form.phone" disabled />
       </el-form-item>
 
-      <el-form-item label="城市" prop="city">
-        <el-input v-model="form.city" placeholder="请输入所在城市" />
+      <el-form-item label="地址" prop="address">
+        <el-input v-model="form.address" placeholder="请输入地址" />
       </el-form-item>
 
       <el-form-item label="个人简介" prop="bio">
@@ -48,13 +48,13 @@
           type="textarea"
           :rows="4"
           placeholder="介绍一下自己吧"
-          maxlength="200"
+          maxlength="500"
           show-word-limit
         />
       </el-form-item>
 
       <el-form-item>
-        <el-button type="primary" @click="handleSubmit">保存修改</el-button>
+        <el-button type="primary" @click="handleSubmit" :loading="uploading">保存修改</el-button>
         <el-button @click="handleReset">重置</el-button>
       </el-form-item>
     </el-form>
@@ -62,32 +62,50 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
+import { getUserInfo, updateUserInfo, updateAvatar } from '@/apis/user'
+import { uploadFile } from '@/apis/oss'
 
 const userStore = useUserStore()
 const formRef = ref(null)
+const uploading = ref(false)
 
 const form = reactive({
-  avatar: userStore.userInfo.avatar,
-  username: userStore.userInfo.username,
-  phone: '138****0001',
-  city: '北京市 朝阳区',
-  bio: '热爱生活，喜欢购买新鲜的农产品，支持绿色健康的生活方式。'
+  avatar: '',
+  nickname: '',
+  phone: '',
+  address: '',
+  bio: ''
 })
 
 const rules = {
-  username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 2, max: 20, message: '用户名长度为2-20个字符', trigger: 'blur' }
-  ],
-  city: [
-    { required: true, message: '请输入所在城市', trigger: 'blur' }
+  nickname: [
+    { required: true, message: '请输入昵称', trigger: 'blur' },
+    { min: 2, max: 50, message: '昵称长度为2-50个字符', trigger: 'blur' }
   ]
 }
 
-const handleAvatarUpload = (file) => {
+// 获取用户信息
+const fetchUserInfo = async () => {
+  try {
+    const res = await getUserInfo()
+    const user = res.data.user
+    
+    form.avatar = user.avatar || ''
+    form.nickname = user.nickname || ''
+    form.phone = user.phone || ''
+    form.address = user.address || ''
+    form.bio = user.bio || ''
+  } catch (error) {
+    console.error('获取用户信息失败:', error)
+    ElMessage.error(error.message || '获取用户信息失败')
+  }
+}
+
+// 上传头像
+const handleAvatarUpload = async (file) => {
   // 检查文件大小（5MB）
   const isLt5M = file.size / 1024 / 1024 < 5
   if (!isLt5M) {
@@ -102,30 +120,71 @@ const handleAvatarUpload = (file) => {
     return false
   }
 
-  // 模拟头像上传
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    form.avatar = e.target.result
+  try {
+    uploading.value = true
+    
+    // 上传到OSS
+    const res = await uploadFile(file, 'user')
+    const avatarUrl = res.data.url
+    
+    // 更新头像
+    await updateAvatar({ avatar: avatarUrl })
+    
+    form.avatar = avatarUrl
+    
+    // 更新store中的用户信息
+    userStore.setUserInfo({ avatar: avatarUrl })
+    
     ElMessage.success('头像上传成功')
+  } catch (error) {
+    console.error('头像上传失败:', error)
+    ElMessage.error(error.message || '头像上传失败')
+  } finally {
+    uploading.value = false
   }
-  reader.readAsDataURL(file)
+  
   return false
 }
 
+// 提交表单
 const handleSubmit = async () => {
   if (!formRef.value) return
 
   try {
     await formRef.value.validate()
+    
+    // 更新用户信息
+    await updateUserInfo({
+      nickname: form.nickname,
+      address: form.address,
+      bio: form.bio
+    })
+    
+    // 更新store中的用户信息
+    userStore.setUserInfo({
+      nickname: form.nickname,
+      address: form.address,
+      bio: form.bio
+    })
+    
     ElMessage.success('信息修改成功')
   } catch (error) {
-    console.error('表单验证失败', error)
+    if (error !== 'cancel') {
+      console.error('更新失败:', error)
+      ElMessage.error(error.message || '信息修改失败')
+    }
   }
 }
 
+// 重置表单
 const handleReset = () => {
-  formRef.value?.resetFields()
+  fetchUserInfo()
 }
+
+// 页面加载时获取用户信息
+onMounted(() => {
+  fetchUserInfo()
+})
 </script>
 
 <style lang="scss" scoped>

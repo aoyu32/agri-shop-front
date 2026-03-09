@@ -5,7 +5,7 @@
       <div class="user-info">
         <el-avatar :src="userStore.userInfo.avatar" :size="80" />
         <div class="user-details">
-          <h2 class="username">{{ userStore.userInfo.username }}</h2>
+          <h2 class="username">{{ userStore.userInfo.nickname || userStore.userInfo.username }}</h2>
           <div class="user-meta">
             <div class="meta-item">
               <i class="iconfont icon-shouji"></i>

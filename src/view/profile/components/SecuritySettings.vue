@@ -27,7 +27,7 @@
           </div>
           <div class="item-content">
             <div class="item-title">手机号绑定</div>
-            <div class="item-desc">已绑定手机号：138****0001</div>
+            <div class="item-desc">已绑定手机号：{{ currentPhone ? currentPhone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') : '未绑定' }}</div>
           </div>
         </div>
         <el-button type="primary" @click="showPhoneDialog = true">更换手机号</el-button>
@@ -128,14 +128,21 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useRouter } from 'vue-router'
+import { useUserStore } from '@/store/modules/user'
+import { changePassword, changePhone, deleteAccount, getUserInfo } from '@/apis/user'
+
+const router = useRouter()
+const userStore = useUserStore()
 
 const showPasswordDialog = ref(false)
 const showPhoneDialog = ref(false)
 const countdown = ref(0)
 const passwordFormRef = ref(null)
 const phoneFormRef = ref(null)
+const currentPhone = ref('')
 
 // 修改密码表单
 const passwordForm = reactive({
@@ -149,6 +156,16 @@ const phoneForm = reactive({
   phone: '',
   code: ''
 })
+
+// 获取用户信息
+const fetchUserInfo = async () => {
+  try {
+    const res = await getUserInfo()
+    currentPhone.value = res.data.user.phone || ''
+  } catch (error) {
+    console.error('获取用户信息失败:', error)
+  }
+}
 
 // 验证确认密码
 const validateConfirmPassword = (rule, value, callback) => {
@@ -201,14 +218,31 @@ const handleChangePassword = async () => {
 
   try {
     await passwordFormRef.value.validate()
+    
+    await changePassword({
+      old_password: passwordForm.oldPassword,
+      new_password: passwordForm.newPassword,
+      confirm_password: passwordForm.confirmPassword
+    })
+    
     ElMessage.success('密码修改成功，请重新登录')
     showPasswordDialog.value = false
+    
     // 重置表单
     passwordForm.oldPassword = ''
     passwordForm.newPassword = ''
     passwordForm.confirmPassword = ''
+    
+    // 退出登录
+    setTimeout(() => {
+      userStore.logout()
+      router.push('/auth/login')
+    }, 1500)
   } catch (error) {
-    console.error('表单验证失败', error)
+    if (error !== 'cancel') {
+      console.error('修改密码失败:', error)
+      ElMessage.error(error.message || '修改密码失败')
+    }
   }
 }
 
@@ -224,6 +258,7 @@ const handleSendCode = () => {
     return
   }
 
+  // TODO: 调用发送验证码接口
   ElMessage.success('验证码已发送')
   countdown.value = 60
 
@@ -241,31 +276,71 @@ const handleChangePhone = async () => {
 
   try {
     await phoneFormRef.value.validate()
+    
+    await changePhone({
+      phone: phoneForm.phone,
+      code: phoneForm.code
+    })
+    
     ElMessage.success('手机号更换成功')
     showPhoneDialog.value = false
+    
     // 重置表单
     phoneForm.phone = ''
     phoneForm.code = ''
+    
+    // 刷新用户信息
+    await fetchUserInfo()
   } catch (error) {
-    console.error('表单验证失败', error)
+    if (error !== 'cancel') {
+      console.error('更换手机号失败:', error)
+      ElMessage.error(error.message || '更换手机号失败')
+    }
   }
 }
 
 // 注销账号
-const handleDeleteAccount = () => {
-  ElMessageBox.confirm(
-    '注销账号后，您的所有数据将被永久删除且无法恢复。确定要注销账号吗？',
-    '警告',
-    {
-      confirmButtonText: '确定注销',
-      cancelButtonText: '取消',
-      type: 'error',
-      confirmButtonClass: 'el-button--danger'
+const handleDeleteAccount = async () => {
+  try {
+    const { value: password } = await ElMessageBox.prompt(
+      '注销账号后，您的所有数据将被永久删除且无法恢复。请输入密码以确认注销：',
+      '警告',
+      {
+        confirmButtonText: '确定注销',
+        cancelButtonText: '取消',
+        inputType: 'password',
+        inputPlaceholder: '请输入密码',
+        inputValidator: (value) => {
+          if (!value) {
+            return '请输入密码'
+          }
+          return true
+        },
+        confirmButtonClass: 'el-button--danger'
+      }
+    )
+
+    await deleteAccount({ password })
+    
+    ElMessage.success('账号注销成功')
+    
+    // 退出登录
+    setTimeout(() => {
+      userStore.logout()
+      router.push('/auth/login')
+    }, 1500)
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('注销账号失败:', error)
+      ElMessage.error(error.message || '注销账号失败')
     }
-  ).then(() => {
-    ElMessage.success('账号注销申请已提交，将在7个工作日内处理')
-  }).catch(() => {})
+  }
 }
+
+// 页面加载时获取用户信息
+onMounted(() => {
+  fetchUserInfo()
+})
 </script>
 
 <style lang="scss" scoped>
