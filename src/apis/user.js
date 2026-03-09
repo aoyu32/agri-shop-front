@@ -55,6 +55,17 @@ export const changePhone = (data) => {
 }
 
 /**
+ * 发送验证码（用于更换手机号）
+ */
+export const sendVerifyCode = (data) => {
+    return request({
+        url: '/api/user/send-code',
+        method: 'post',
+        data
+    })
+}
+
+/**
  * 注销账号
  */
 export const deleteAccount = (data) => {

@@ -22,15 +22,15 @@
       <div class="header-right">
         <div class="user-stats">
           <div class="stat-item">
-            <div class="stat-value">{{ stats.orders }}</div>
+            <div class="stat-value">{{ userStore.userStatistics.order_count }}</div>
             <div class="stat-label">订单数</div>
           </div>
           <div class="stat-item">
-            <div class="stat-value">{{ stats.favorites }}</div>
+            <div class="stat-value">{{ userStore.userStatistics.favorite_count }}</div>
             <div class="stat-label">收藏数</div>
           </div>
           <div class="stat-item">
-            <div class="stat-value">{{ stats.footprints }}</div>
+            <div class="stat-value">{{ userStore.userStatistics.footprint_count }}</div>
             <div class="stat-label">足迹数</div>
           </div>
         </div>
@@ -55,7 +55,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
@@ -73,15 +73,13 @@ const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 
-// 用户统计数据
-const stats = ref({
-  orders: 28,
-  favorites: 45,
-  footprints: 156
-})
-
 // 当前激活的菜单
 const activeMenu = ref(route.query.menu || 'cart')
+
+// 页面加载时获取用户信息和统计数据
+onMounted(() => {
+  userStore.getUserInfo()
+})
 
 // 监听路由变化，更新激活菜单
 watch(

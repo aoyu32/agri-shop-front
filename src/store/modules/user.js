@@ -24,6 +24,13 @@ export const useUserStore = defineStore('user', () => {
     isLogin: false
   })
 
+  // 用户统计数据
+  const userStatistics = ref({
+    order_count: 0,
+    favorite_count: 0,
+    footprint_count: 0
+  })
+
   // Token
   const token = ref(localStorage.getItem('token') || '')
 
@@ -86,6 +93,11 @@ export const useUserStore = defineStore('user', () => {
     try {
       const res = await getUserInfoApi()
       setUserInfo(res.data.user)
+
+      // 保存统计数据
+      if (res.data.statistics) {
+        userStatistics.value = res.data.statistics
+      }
 
       // 如果是消费者，获取购物车数量
       if (res.data.user.role === USER_ROLES.CONSUMER) {
@@ -172,6 +184,7 @@ export const useUserStore = defineStore('user', () => {
 
   return {
     userInfo,
+    userStatistics,
     token,
     unreadMessages,
     cartCount,

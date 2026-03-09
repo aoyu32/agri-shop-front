@@ -132,7 +132,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/modules/user'
-import { changePassword, changePhone, deleteAccount, getUserInfo } from '@/apis/user'
+import { changePassword, changePhone, deleteAccount, getUserInfo, sendVerifyCode } from '@/apis/user'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -247,7 +247,7 @@ const handleChangePassword = async () => {
 }
 
 // 发送验证码
-const handleSendCode = () => {
+const handleSendCode = async () => {
   if (!phoneForm.phone) {
     ElMessage.warning('请先输入手机号')
     return
@@ -258,16 +258,28 @@ const handleSendCode = () => {
     return
   }
 
-  // TODO: 调用发送验证码接口
-  ElMessage.success('验证码已发送')
-  countdown.value = 60
-
-  const timer = setInterval(() => {
-    countdown.value--
-    if (countdown.value <= 0) {
-      clearInterval(timer)
+  try {
+    const res = await sendVerifyCode({ phone: phoneForm.phone })
+    
+    // 开发环境显示验证码
+    if (res.data.code) {
+      ElMessage.success(`验证码已发送：${res.data.code}`)
+    } else {
+      ElMessage.success('验证码已发送')
     }
-  }, 1000)
+    
+    countdown.value = 60
+
+    const timer = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) {
+        clearInterval(timer)
+      }
+    }, 1000)
+  } catch (error) {
+    console.error('发送验证码失败:', error)
+    ElMessage.error(error.message || '发送验证码失败')
+  }
 }
 
 // 更换手机号
@@ -290,6 +302,7 @@ const handleChangePhone = async () => {
     phoneForm.code = ''
     
     // 刷新用户信息
+    await userStore.getUserInfo()
     await fetchUserInfo()
   } catch (error) {
     if (error !== 'cancel') {
