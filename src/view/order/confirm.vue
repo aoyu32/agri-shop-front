@@ -11,23 +11,70 @@
           <i class="iconfont icon-didian"></i>
           收货地址
         </div>
-        <div class="address-form">
-          <el-form :model="addressForm" label-width="100px">
-            <el-form-item label="收货人">
-              <el-input v-model="addressForm.receiver_name" placeholder="请输入收货人姓名" />
-            </el-form-item>
-            <el-form-item label="手机号">
-              <el-input v-model="addressForm.receiver_phone" placeholder="请输入手机号" />
-            </el-form-item>
-            <el-form-item label="收货地址">
-              <el-input
-                v-model="addressForm.receiver_address"
-                type="textarea"
-                :rows="3"
-                placeholder="请输入详细地址"
-              />
-            </el-form-item>
-          </el-form>
+        
+        <!-- 有地址时显示 -->
+        <div v-if="addresses.length > 0" class="address-content">
+          <!-- 当前选中的地址 -->
+          <div v-if="selectedAddress" class="selected-address" @click="showAddressSelector = true">
+            <div class="address-info">
+              <div class="address-header">
+                <span class="name">{{ selectedAddress.receiver_name }}</span>
+                <span class="phone">{{ selectedAddress.receiver_phone }}</span>
+                <el-tag v-if="selectedAddress.is_default === 1" type="success" size="small">默认</el-tag>
+              </div>
+              <div class="address-detail">
+                {{ selectedAddress.full_address }}
+              </div>
+            </div>
+            <div class="change-btn">
+              <span>更换地址</span>
+              <i class="el-icon-arrow-right"></i>
+            </div>
+          </div>
+
+          <!-- 地址选择对话框 -->
+          <el-dialog
+            v-model="showAddressSelector"
+            title="选择收货地址"
+            width="600px"
+          >
+            <div class="address-selector">
+              <div
+                v-for="address in addresses"
+                :key="address.id"
+                class="address-item"
+                :class="{ active: selectedAddressId === address.id }"
+                @click="selectAddress(address)"
+              >
+                <div class="address-radio">
+                  <el-radio :model-value="selectedAddressId" :label="address.id" />
+                </div>
+                <div class="address-info">
+                  <div class="address-header">
+                    <span class="name">{{ address.receiver_name }}</span>
+                    <span class="phone">{{ address.receiver_phone }}</span>
+                    <el-tag v-if="address.is_default === 1" type="success" size="small">默认</el-tag>
+                  </div>
+                  <div class="address-detail">
+                    {{ address.full_address }}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <template #footer>
+              <el-button @click="handleAddAddress">新增地址</el-button>
+              <el-button type="primary" @click="confirmAddress">确定</el-button>
+            </template>
+          </el-dialog>
+        </div>
+
+        <!-- 无地址时显示 -->
+        <div v-else class="no-address">
+          <div class="empty-state">
+            <i class="iconfont icon-didian"></i>
+            <p>您还没有收货地址</p>
+            <el-button type="primary" @click="handleAddAddress">添加收货地址</el-button>
+          </div>
         </div>
       </div>
 
@@ -120,6 +167,7 @@ import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
 import { getCartList } from '@/apis/cart'
 import { createOrder } from '@/apis/order'
+import { getAddressList, getDefaultAddress } from '@/apis/address'
 
 const route = useRoute()
 const router = useRouter()
@@ -129,8 +177,12 @@ const loading = ref(false)
 const submitting = ref(false)
 const cartItems = ref([])
 const remark = ref('')
+const addresses = ref([])
+const selectedAddressId = ref(null)
+const selectedAddress = ref(null)
+const showAddressSelector = ref(false)
 
-// 收货地址表单
+// 收货地址表单（无地址时使用）
 const addressForm = ref({
   receiver_name: userStore.userInfo.username || '',
   receiver_phone: userStore.userInfo.phone || '',
@@ -143,6 +195,48 @@ const totalAmount = computed(() => {
     .reduce((sum, item) => sum + item.price * item.quantity, 0)
     .toFixed(2)
 })
+
+// 获取地址列表
+const fetchAddresses = async () => {
+  try {
+    const res = await getAddressList()
+    addresses.value = res.data.list
+    
+    // 如果有地址，选择默认地址或第一个地址
+    if (addresses.value.length > 0) {
+      const defaultAddr = addresses.value.find(addr => addr.is_default === 1)
+      const targetAddr = defaultAddr || addresses.value[0]
+      selectedAddressId.value = targetAddr.id
+      selectedAddress.value = targetAddr
+    }
+  } catch (error) {
+    console.error('获取地址列表失败:', error)
+  }
+}
+
+// 选择地址
+const selectAddress = (address) => {
+  selectedAddressId.value = address.id
+}
+
+// 确认选择地址
+const confirmAddress = () => {
+  const address = addresses.value.find(addr => addr.id === selectedAddressId.value)
+  if (address) {
+    selectedAddress.value = address
+  }
+  showAddressSelector.value = false
+}
+
+// 添加新地址
+const handleAddAddress = () => {
+  // 保存当前购物车ID到sessionStorage
+  const cartIds = route.query.cart_ids
+  if (cartIds) {
+    sessionStorage.setItem('pendingOrderCartIds', cartIds)
+  }
+  router.push('/profile?menu=address')
+}
 
 // 获取购物车商品
 const fetchCartItems = async () => {
@@ -183,21 +277,15 @@ const fetchCartItems = async () => {
 
 // 提交订单
 const handleSubmit = async () => {
-  // 验证收货信息
-  if (!addressForm.value.receiver_name) {
-    ElMessage.warning('请输入收货人姓名')
+  // 验证是否有地址
+  if (addresses.value.length === 0) {
+    ElMessage.warning('请先添加收货地址')
+    handleAddAddress()
     return
   }
-  if (!addressForm.value.receiver_phone) {
-    ElMessage.warning('请输入手机号')
-    return
-  }
-  if (!/^1[3-9]\d{9}$/.test(addressForm.value.receiver_phone)) {
-    ElMessage.warning('请输入正确的手机号')
-    return
-  }
-  if (!addressForm.value.receiver_address) {
-    ElMessage.warning('请输入收货地址')
+
+  if (!selectedAddressId.value) {
+    ElMessage.warning('请选择收货地址')
     return
   }
 
@@ -205,34 +293,26 @@ const handleSubmit = async () => {
     submitting.value = true
     const cartIds = route.query.cart_ids?.split(',').map(id => parseInt(id)) || []
     
-    const res = await createOrder({
+    const orderData = {
       cart_ids: cartIds,
-      receiver_name: addressForm.value.receiver_name,
-      receiver_phone: addressForm.value.receiver_phone,
-      receiver_address: addressForm.value.receiver_address,
+      address_id: selectedAddressId.value,
       remark: remark.value
-    })
+    }
+
+    const res = await createOrder(orderData)
 
     console.log('创建订单响应:', res)
-    console.log('订单数据:', res.data)
-    console.log('订单列表:', res.data.orders)
     
     // 跳转到支付页面或订单列表
     if (res.data && res.data.orders && res.data.orders.length > 0) {
-      console.log('准备跳转，订单数量:', res.data.orders.length)
-      console.log('第一个订单:', res.data.orders[0])
-      
       // 如果只有一个订单，跳转到支付页面
       if (res.data.orders.length === 1) {
         const orderId = res.data.orders[0].order_id
-        console.log('跳转到支付页面，订单ID:', orderId)
         
-        // 延迟显示成功消息，先跳转
         setTimeout(() => {
           ElMessage.success('订单创建成功')
         }, 100)
         
-        // 使用 replace 替代 push，避免可以返回
         router.replace({
           path: '/payment',
           query: {
@@ -241,13 +321,10 @@ const handleSubmit = async () => {
         })
       } else {
         // 多个订单，跳转到订单列表
-        console.log('跳转到订单列表')
         ElMessage.success('订单创建成功')
         router.replace('/profile?menu=order-pending')
       }
     } else {
-      // 如果没有订单数据，默认跳转到订单列表
-      console.log('没有订单数据，跳转到订单列表')
       ElMessage.success('订单创建成功')
       router.replace('/profile?menu=order-pending')
     }
@@ -265,6 +342,7 @@ const handleBack = () => {
 }
 
 onMounted(() => {
+  fetchAddresses()
   fetchCartItems()
 })
 </script>
@@ -318,9 +396,139 @@ onMounted(() => {
     }
 
     .address-section {
-      .address-form {
-        :deep(.el-form-item) {
-          margin-bottom: 16px;
+      .address-content {
+        .selected-address {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 20px;
+          border: 2px solid var(--theme-primary-color);
+          border-radius: 8px;
+          background-color: rgba(82, 196, 26, 0.05);
+          cursor: pointer;
+          transition: all 0.3s;
+
+          &:hover {
+            background-color: rgba(82, 196, 26, 0.1);
+          }
+
+          .address-info {
+            flex: 1;
+
+            .address-header {
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              margin-bottom: 8px;
+
+              .name {
+                font-size: 16px;
+                font-weight: 600;
+                color: var(--text-primary-color);
+              }
+
+              .phone {
+                font-size: 14px;
+                color: var(--text-secondary-color);
+              }
+            }
+
+            .address-detail {
+              font-size: 14px;
+              color: var(--text-primary-color);
+              line-height: 1.6;
+            }
+          }
+
+          .change-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--theme-primary-color);
+            font-size: 14px;
+
+            i {
+              font-size: 16px;
+            }
+          }
+        }
+      }
+
+      .address-selector {
+        max-height: 400px;
+        overflow-y: auto;
+
+        .address-item {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          padding: 16px;
+          border: 2px solid var(--border-color);
+          border-radius: 8px;
+          margin-bottom: 12px;
+          cursor: pointer;
+          transition: all 0.3s;
+
+          &:hover {
+            border-color: var(--theme-primary-color);
+            background-color: rgba(82, 196, 26, 0.02);
+          }
+
+          &.active {
+            border-color: var(--theme-primary-color);
+            background-color: rgba(82, 196, 26, 0.05);
+          }
+
+          .address-radio {
+            padding-top: 2px;
+          }
+
+          .address-info {
+            flex: 1;
+
+            .address-header {
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              margin-bottom: 8px;
+
+              .name {
+                font-size: 16px;
+                font-weight: 600;
+                color: var(--text-primary-color);
+              }
+
+              .phone {
+                font-size: 14px;
+                color: var(--text-secondary-color);
+              }
+            }
+
+            .address-detail {
+              font-size: 14px;
+              color: var(--text-primary-color);
+              line-height: 1.6;
+            }
+          }
+        }
+      }
+
+      .no-address {
+        .empty-state {
+          text-align: center;
+          padding: 60px 20px;
+
+          i {
+            font-size: 80px;
+            color: var(--text-placeholder-color);
+            margin-bottom: 20px;
+          }
+
+          p {
+            font-size: 16px;
+            color: var(--text-secondary-color);
+            margin-bottom: 24px;
+          }
         }
       }
     }
