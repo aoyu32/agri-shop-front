@@ -71,7 +71,7 @@
         <el-table-column label="操作" width="320" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" size="small" @click="handleViewDetail(row)">查看详情</el-button>
-            <el-button v-if="row.status === 'pending'" type="success" size="small" @click="handleShip(row)">发货</el-button>
+            <el-button v-if="row.status === 'paid'" type="success" size="small" @click="handleShip(row)">发货</el-button>
             <el-button v-if="row.status === 'shipped'" type="info" size="small" @click="handleViewLogistics(row)">查看物流</el-button>
             <el-button v-if="row.status === 'refund'" type="success" size="small" @click="handleRefundApprove(row)">同意{{ row.refundType === 'refund' ? '退款' : '退货' }}</el-button>
             <el-button v-if="row.status === 'refund'" type="danger" size="small" @click="handleRefundReject(row)">拒绝</el-button>
@@ -86,7 +86,7 @@
           v-model:current-page="currentPage"
           v-model:page-size="pageSize"
           :page-sizes="[10, 20, 50, 100]"
-          :total="filteredOrders.length"
+          :total="total"
           layout="total, sizes, prev, pager, next, jumper"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
@@ -217,7 +217,7 @@
               <span class="amount">¥{{ currentOrder.totalAmount }}</span>
             </div>
             <div class="order-actions">
-              <el-button v-if="currentOrder.status === 'pending'" type="success" @click="handleShipFromDetail">发货</el-button>
+              <el-button v-if="currentOrder.status === 'paid'" type="success" @click="handleShipFromDetail">发货</el-button>
               <el-button v-if="currentOrder.status === 'shipped'" type="info" @click="handleViewLogistics(currentOrder)">查看物流</el-button>
               <el-button v-if="currentOrder.status === 'refund'" type="success" @click="handleRefundApproveFromDetail">同意{{ currentOrder.refundType === 'refund' ? '退款' : '退货' }}</el-button>
               <el-button v-if="currentOrder.status === 'refund'" type="danger" @click="handleRefundRejectFromDetail">拒绝</el-button>
@@ -232,121 +232,32 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import {
+  getMerchantOrderList,
+  getMerchantOrderDetail,
+  shipOrder,
+  approveRefund,
+  rejectRefund,
+  deleteMerchantOrder
+} from '@/apis/merchantOrder'
 
 const route = useRoute()
 
-// 模拟订单数据
-const mockOrders = ref([
-  {
-    id: 1,
-    orderNo: 'ORD202402080001',
-    buyer: {
-      name: '张三',
-      phone: '138****1234',
-      avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
-    },
-    products: [
-      { id: 1, name: '有机西红柿', spec: '500g/份', quantity: 2, price: 15.80, image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=100&h=100&fit=crop' },
-      { id: 2, name: '新鲜黄瓜', spec: '500g/份', quantity: 1, price: 8.50, image: 'https://via.placeholder.com/100' }
-    ],
-    totalAmount: 40.10,
-    status: 'pending',
-    createTime: '2024-02-08 10:30:25',
-    address: '山东省济南市历下区解放路100号'
-  },
-  {
-    id: 2,
-    orderNo: 'ORD202402080002',
-    buyer: {
-      name: '李四',
-      phone: '139****5678',
-      avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
-    },
-    products: [
-      { id: 3, name: '有机生菜', spec: '300g/份', quantity: 3, price: 12.00, image: 'https://via.placeholder.com/100' }
-    ],
-    totalAmount: 36.00,
-    status: 'shipped',
-    createTime: '2024-02-07 15:20:10',
-    address: '山东省青岛市市南区香港中路200号'
-  },
-  {
-    id: 3,
-    orderNo: 'ORD202402080003',
-    buyer: {
-      name: '王五',
-      phone: '137****9012',
-      avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
-    },
-    products: [
-      { id: 4, name: '新鲜菠菜', spec: '500g/份', quantity: 1, price: 9.90, image: 'https://via.placeholder.com/100' },
-      { id: 5, name: '有机芹菜', spec: '500g/份', quantity: 2, price: 11.50, image: 'https://via.placeholder.com/100' }
-    ],
-    totalAmount: 32.90,
-    status: 'completed',
-    createTime: '2024-02-06 09:15:30',
-    address: '山东省烟台市芝罘区南大街300号'
-  },
-  {
-    id: 4,
-    orderNo: 'ORD202402080004',
-    buyer: {
-      name: '赵六',
-      phone: '136****3456',
-      avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
-    },
-    products: [
-      { id: 6, name: '新鲜白菜', spec: '1kg/份', quantity: 2, price: 7.00, image: 'https://via.placeholder.com/100' }
-    ],
-    totalAmount: 14.00,
-    status: 'refund',
-    refundType: 'refund',
-    refundReason: '商品质量问题',
-    refundDescription: '收到的白菜有部分腐烂，无法食用',
-    refundStatus: '待商家处理',
-    refundTime: '2024-02-08 14:20:00',
-    refundImages: [
-      { url: 'https://via.placeholder.com/200', name: 'image1.jpg' },
-      { url: 'https://via.placeholder.com/200', name: 'image2.jpg' }
-    ],
-    createTime: '2024-02-05 11:30:00',
-    address: '山东省威海市环翠区文化路400号'
-  },
-  {
-    id: 5,
-    orderNo: 'ORD202402080005',
-    buyer: {
-      name: '孙七',
-      phone: '135****7890',
-      avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
-    },
-    products: [
-      { id: 7, name: '新鲜土豆', spec: '2kg/份', quantity: 1, price: 21.00, image: 'https://via.placeholder.com/100' }
-    ],
-    totalAmount: 21.00,
-    status: 'refund',
-    refundType: 'return',
-    refundReason: '不想要了',
-    refundDescription: '',
-    refundStatus: '待商家处理',
-    refundTime: '2024-02-07 16:45:00',
-    refundImages: [],
-    createTime: '2024-02-04 13:20:00',
-    address: '山东省潍坊市奎文区胜利街500号'
-  }
-])
-
+// 订单数据
+const orders = ref([])
 const loading = ref(false)
 const searchKeyword = ref('')
 const currentPage = ref(1)
 const pageSize = ref(10)
+const total = ref(0)
 
 // 发货对话框
 const shipDialogVisible = ref(false)
 const shipForm = ref({
+  orderId: null,
   orderNo: '',
   logistics: '',
   trackingNo: ''
@@ -377,81 +288,128 @@ const currentStatus = computed(() => {
     'order-completed': 'completed',
     'order-refund': 'refund'
   }
-  return statusMap[menu] || 'all'
-})
-
-// 筛选订单
-const filteredOrders = computed(() => {
-  let orders = mockOrders.value
-
-  // 按状态筛选
-  if (currentStatus.value !== 'all') {
-    orders = orders.filter(order => order.status === currentStatus.value)
-  }
-
-  // 按关键词搜索
-  if (searchKeyword.value) {
-    const keyword = searchKeyword.value.toLowerCase()
-    orders = orders.filter(order =>
-      order.orderNo.toLowerCase().includes(keyword) ||
-      order.buyer.name.toLowerCase().includes(keyword)
-    )
-  }
-
-  return orders
+  return statusMap[menu] || ''
 })
 
 // 分页显示的订单
 const displayOrders = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value
-  const end = start + pageSize.value
-  return filteredOrders.value.slice(start, end)
+  return orders.value
 })
 
-// 监听路由变化，重置页码
+// 监听路由变化，重置页码并重新加载
 watch(() => route.query.menu, () => {
   currentPage.value = 1
+  fetchOrders()
 })
+
+// 获取订单列表
+const fetchOrders = async () => {
+  loading.value = true
+  try {
+    const params = {
+      page: currentPage.value,
+      page_size: pageSize.value
+    }
+
+    if (currentStatus.value) {
+      params.status = currentStatus.value
+    }
+
+    if (searchKeyword.value) {
+      params.keyword = searchKeyword.value
+    }
+
+    const res = await getMerchantOrderList(params)
+    orders.value = res.data.list.map(order => ({
+      id: order.id,
+      orderNo: order.order_no,
+      buyer: order.buyer,
+      products: order.products,
+      totalAmount: order.total_amount,
+      status: order.status,
+      createTime: order.create_time,
+      address: order.address,
+      refundType: order.refund_type,
+      refundReason: order.refund_reason,
+      refundDescription: order.refund_description,
+      refundStatus: order.refund_status,
+      refundTime: order.refund_time,
+      refundImages: order.refund_images || []
+    }))
+    total.value = res.data.total
+  } catch (error) {
+    console.error('获取订单列表失败:', error)
+    ElMessage.error(error.message || '获取订单列表失败')
+  } finally {
+    loading.value = false
+  }
+}
 
 const getStatusType = (status) => {
   const typeMap = {
-    'pending': 'warning',
+    'pending': 'info',
+    'paid': 'warning',
     'shipped': 'primary',
     'completed': 'success',
-    'refund': 'danger'
+    'refund': 'danger',
+    'cancelled': 'info'
   }
   return typeMap[status] || 'info'
 }
 
 const getStatusText = (status) => {
   const textMap = {
-    'pending': '待发货',
+    'pending': '待付款',
+    'paid': '待发货',
     'shipped': '已发货',
     'completed': '已完成',
-    'refund': '退款中'
+    'refund': '退款中',
+    'cancelled': '已取消'
   }
   return textMap[status] || '未知'
 }
 
 const handleSearch = () => {
   currentPage.value = 1
+  fetchOrders()
 }
 
-const handleSizeChange = () => {
+const handleSizeChange = (size) => {
+  pageSize.value = size
   currentPage.value = 1
+  fetchOrders()
 }
 
-const handleCurrentChange = () => {
-  // 页码变化
+const handleCurrentChange = (page) => {
+  currentPage.value = page
+  fetchOrders()
 }
 
-const handleViewDetail = (row) => {
-  currentOrder.value = row
-  detailDialogVisible.value = true
+const handleViewDetail = async (row) => {
+  try {
+    const res = await getMerchantOrderDetail(row.id)
+    currentOrder.value = {
+      ...res.data.order,
+      orderNo: res.data.order.order_no,
+      createTime: res.data.order.create_time,
+      totalAmount: res.data.order.total_amount,
+      refundType: res.data.order.refund_type,
+      refundReason: res.data.order.refund_reason,
+      refundDescription: res.data.order.refund_description,
+      refundStatus: res.data.order.refund_status,
+      refundTime: res.data.order.refund_time,
+      refundImages: res.data.order.refund_images || []
+    }
+    detailDialogVisible.value = true
+  } catch (error) {
+    console.error('获取订单详情失败:', error)
+    ElMessage.error(error.message || '获取订单详情失败')
+  }
 }
 
 const handleShip = (row) => {
   shipForm.value = {
+    orderId: row.id,
     orderNo: row.orderNo,
     logistics: '',
     trackingNo: ''
@@ -459,18 +417,24 @@ const handleShip = (row) => {
   shipDialogVisible.value = true
 }
 
-const confirmShip = () => {
+const confirmShip = async () => {
   if (!shipForm.value.logistics || !shipForm.value.trackingNo) {
     ElMessage.warning('请填写完整的物流信息')
     return
   }
 
-  // 模拟发货
-  const order = mockOrders.value.find(o => o.orderNo === shipForm.value.orderNo)
-  if (order) {
-    order.status = 'shipped'
+  try {
+    await shipOrder({
+      order_id: shipForm.value.orderId,
+      logistics: shipForm.value.logistics,
+      tracking_no: shipForm.value.trackingNo
+    })
     ElMessage.success('发货成功')
     shipDialogVisible.value = false
+    fetchOrders()
+  } catch (error) {
+    console.error('发货失败:', error)
+    ElMessage.error(error.message || '发货失败')
   }
 }
 
@@ -490,11 +454,14 @@ const handleDelete = (row) => {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
-  }).then(() => {
-    const index = mockOrders.value.findIndex(o => o.id === row.id)
-    if (index > -1) {
-      mockOrders.value.splice(index, 1)
+  }).then(async () => {
+    try {
+      await deleteMerchantOrder(row.id)
       ElMessage.success('删除成功')
+      fetchOrders()
+    } catch (error) {
+      console.error('删除订单失败:', error)
+      ElMessage.error(error.message || '删除订单失败')
     }
   }).catch(() => {})
 }
@@ -520,11 +487,14 @@ const handleRefundApprove = (row) => {
         cancelButtonText: '取消',
         type: 'success'
       }
-    ).then(() => {
-      const order = mockOrders.value.find(o => o.id === row.id)
-      if (order) {
-        order.refundStatus = '商家已同意，退款处理中'
+    ).then(async () => {
+      try {
+        await approveRefund(row.id)
         ElMessage.success('已同意退款申请，系统将自动退款给买家')
+        fetchOrders()
+      } catch (error) {
+        console.error('处理退款申请失败:', error)
+        ElMessage.error(error.message || '处理退款申请失败')
       }
     }).catch(() => {})
   } else {
@@ -537,11 +507,14 @@ const handleRefundApprove = (row) => {
         cancelButtonText: '取消',
         type: 'success'
       }
-    ).then(() => {
-      const order = mockOrders.value.find(o => o.id === row.id)
-      if (order) {
-        order.refundStatus = '商家已同意，等待买家退货'
+    ).then(async () => {
+      try {
+        await approveRefund(row.id)
         ElMessage.success('已同意退货申请，请等待买家退货')
+        fetchOrders()
+      } catch (error) {
+        console.error('处理退款申请失败:', error)
+        ElMessage.error(error.message || '处理退款申请失败')
       }
     }).catch(() => {})
   }
@@ -559,11 +532,17 @@ const handleRefundReject = (row) => {
       }
       return true
     }
-  }).then(({ value }) => {
-    const order = mockOrders.value.find(o => o.id === row.id)
-    if (order) {
-      order.refundStatus = `商家已拒绝：${value}`
+  }).then(async ({ value }) => {
+    try {
+      await rejectRefund({
+        order_id: row.id,
+        reject_reason: value
+      })
       ElMessage.success('已拒绝申请')
+      fetchOrders()
+    } catch (error) {
+      console.error('处理退款申请失败:', error)
+      ElMessage.error(error.message || '处理退款申请失败')
     }
   }).catch(() => {})
 }
@@ -581,6 +560,11 @@ const handleRefundRejectFromDetail = () => {
     handleRefundReject(currentOrder.value)
   }
 }
+
+// 初始化
+onMounted(() => {
+  fetchOrders()
+})
 </script>
 
 <style lang="scss" scoped>
