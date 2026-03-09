@@ -288,6 +288,19 @@ onMounted(async () => {
   await loadOrigins()
   loadProducts()
 })
+
+// 监听路由参数变化
+watch(() => route.query.categoryId, async (newCategoryId) => {
+  if (newCategoryId && categoryTree.value.length > 0) {
+    const category = categoryTree.value.find(c => c.id === parseInt(newCategoryId))
+    if (category) {
+      selectedCategory.value = category
+      selectedSubCategory.value = null
+      currentPage.value = 1
+      loadProducts()
+    }
+  }
+})
 </script>
 
 <style lang="scss" scoped>

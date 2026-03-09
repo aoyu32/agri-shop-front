@@ -4,7 +4,7 @@
       <div class="section-title">当季农产品</div>
       <div class="season-info">{{ seasonText }}</div>
     </div>
-    <div class="products-list">
+    <div v-loading="loading" class="products-list">
       <SeasonalProductCard
         v-for="product in displayProducts"
         :key="product.id"
@@ -12,42 +12,73 @@
         @click="handleProductClick"
       />
     </div>
+    <div v-if="!loading && displayProducts.length === 0" class="empty-state">
+      <el-empty description="暂无当季农产品" />
+    </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import SeasonalProductCard from '@/components/seasonal-card/index.vue'
-import { seasonalProducts } from '@/mock/home/seasonal'
+import { getSeasonalProducts } from '@/apis/seasonal'
+
+const router = useRouter()
+const loading = ref(false)
+const products = ref([])
+const currentSeason = ref('')
+
+// 季节名称映射
+const seasonNames = {
+  spring: '春季',
+  summer: '夏季',
+  autumn: '秋季',
+  winter: '冬季'
+}
 
 // 只显示前6个产品
 const displayProducts = computed(() => {
-  return seasonalProducts.slice(0, 6)
+  return products.value.slice(0, 6)
 })
-
-// 获取当前季节
-const getCurrentSeason = () => {
-  const month = new Date().getMonth() + 1
-  if (month >= 3 && month <= 5) return '春季'
-  if (month >= 6 && month <= 8) return '夏季'
-  if (month >= 9 && month <= 11) return '秋季'
-  return '冬季'
-}
 
 // 季节文本
 const seasonText = computed(() => {
-  const season = getCurrentSeason()
-  const year = '推荐食用的农产品'
-  return `${season}${year}`
+  const seasonName = seasonNames[currentSeason.value] || '当季'
+  return `${seasonName}推荐食用的农产品`
 })
 
-const handleProductClick = (product) => {
-  ElMessage.info(`查看产品: ${product.name}`)
+// 获取当季农产品
+const fetchSeasonalProducts = async () => {
+  loading.value = true
+  try {
+    const res = await getSeasonalProducts()
+    products.value = res.data.products || []
+    currentSeason.value = res.data.selected_season || ''
+  } catch (error) {
+    console.error('获取当季农产品失败:', error)
+    ElMessage.error('获取当季农产品失败')
+  } finally {
+    loading.value = false
+  }
 }
+
+const handleProductClick = (product) => {
+  // 跳转到分类页面，并传递分类ID
+  router.push({
+    path: '/category',
+    query: {
+      categoryId: product.category_id
+    }
+  })
+}
+
+onMounted(() => {
+  fetchSeasonalProducts()
+})
 </script>
 
 <style lang="scss" scoped>
 @use './SeasonalProducts.scss' as *;
 </style>
-
