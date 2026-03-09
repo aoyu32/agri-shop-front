@@ -58,11 +58,11 @@
         :rules="rules"
         label-width="80px"
       >
-        <el-form-item label="收货人" prop="name">
-          <el-input v-model="form.name" placeholder="请输入收货人姓名" />
+        <el-form-item label="收货人" prop="receiver_name">
+          <el-input v-model="form.receiver_name" placeholder="请输入收货人姓名" />
         </el-form-item>
-        <el-form-item label="手机号" prop="phone">
-          <el-input v-model="form.phone" placeholder="请输入手机号" />
+        <el-form-item label="手机号" prop="receiver_phone">
+          <el-input v-model="form.receiver_phone" placeholder="请输入手机号" />
         </el-form-item>
         <el-form-item label="省市区" prop="addressCode">
           <el-cascader
@@ -73,16 +73,16 @@
             clearable
           />
         </el-form-item>
-        <el-form-item label="详细地址" prop="detail">
+        <el-form-item label="详细地址" prop="detail_address">
           <el-input
-            v-model="form.detail"
+            v-model="form.detail_address"
             type="textarea"
             :rows="3"
             placeholder="请输入详细地址"
           />
         </el-form-item>
         <el-form-item>
-          <el-checkbox v-model="form.isDefault">设为默认地址</el-checkbox>
+          <el-checkbox v-model="form.is_default">设为默认地址</el-checkbox>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -94,68 +94,73 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowDown } from '@element-plus/icons-vue'
 import { regionData } from 'element-china-area-data'
+import {
+  getAddressList,
+  addAddress,
+  updateAddress,
+  deleteAddress as deleteAddressApi,
+  setDefaultAddress
+} from '@/apis/address'
 
-const addresses = ref([
-  {
-    id: 1,
-    name: '张三',
-    phone: '138****0001',
-    addressCode: ['110000', '110100', '110101'],
-    region: '北京市 东城区',
-    detail: '东华门街道某某小区1号楼101室',
-    fullAddress: '北京市 东城区 东华门街道某某小区1号楼101室',
-    isDefault: true
-  },
-  {
-    id: 2,
-    name: '李四',
-    phone: '139****0002',
-    addressCode: ['310000', '310100', '310115'],
-    region: '上海市 浦东新区',
-    detail: '陆家嘴街道某某大厦2栋202室',
-    fullAddress: '上海市 浦东新区 陆家嘴街道某某大厦2栋202室',
-    isDefault: false
-  }
-])
-
+const addresses = ref([])
+const loading = ref(false)
 const dialogVisible = ref(false)
 const formRef = ref(null)
 const editingId = ref(null)
 
 const form = ref({
-  name: '',
-  phone: '',
+  receiver_name: '',
+  receiver_phone: '',
   addressCode: [],
-  detail: '',
-  isDefault: false
+  detail_address: '',
+  is_default: false
 })
 
 const rules = {
-  name: [{ required: true, message: '请输入收货人姓名', trigger: 'blur' }],
-  phone: [
+  receiver_name: [{ required: true, message: '请输入收货人姓名', trigger: 'blur' }],
+  receiver_phone: [
     { required: true, message: '请输入手机号', trigger: 'blur' },
     { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
   ],
   addressCode: [{ required: true, message: '请选择省市区', trigger: 'change' }],
-  detail: [{ required: true, message: '请输入详细地址', trigger: 'blur' }]
+  detail_address: [{ required: true, message: '请输入详细地址', trigger: 'blur' }]
 }
 
 const dialogTitle = computed(() => {
   return editingId.value ? '编辑地址' : '新增地址'
 })
 
+// 获取地址列表
+const fetchAddresses = async () => {
+  try {
+    loading.value = true
+    const res = await getAddressList()
+    addresses.value = res.data.list.map(addr => ({
+      ...addr,
+      addressCode: [addr.province_code, addr.city_code, addr.district_code].filter(Boolean),
+      name: addr.receiver_name,
+      phone: addr.receiver_phone,
+      fullAddress: addr.full_address,
+      isDefault: addr.is_default === 1
+    }))
+  } catch (error) {
+    ElMessage.error(error.message || '获取地址列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
 const handleAdd = () => {
   editingId.value = null
   form.value = {
-    name: '',
-    phone: '',
+    receiver_name: '',
+    receiver_phone: '',
     addressCode: [],
-    detail: '',
-    isDefault: false
+    detail_address: '',
+    is_default: false
   }
   dialogVisible.value = true
 }
@@ -163,11 +168,11 @@ const handleAdd = () => {
 const handleEdit = (address) => {
   editingId.value = address.id
   form.value = {
-    name: address.name,
-    phone: address.phone,
+    receiver_name: address.receiver_name,
+    receiver_phone: address.receiver_phone,
     addressCode: address.addressCode || [],
-    detail: address.detail,
-    isDefault: address.isDefault
+    detail_address: address.detail_address,
+    is_default: address.is_default === 1
   }
   dialogVisible.value = true
 }
@@ -201,42 +206,33 @@ const handleSubmit = async () => {
 
     const regionText = getRegionText(form.value.addressCode)
 
+    const data = {
+      receiver_name: form.value.receiver_name,
+      receiver_phone: form.value.receiver_phone,
+      province_code: form.value.addressCode[0] || '',
+      province_name: regionText.split(' ')[0] || '',
+      city_code: form.value.addressCode[1] || '',
+      city_name: regionText.split(' ')[1] || '',
+      district_code: form.value.addressCode[2] || '',
+      district_name: regionText.split(' ')[2] || '',
+      detail_address: form.value.detail_address,
+      is_default: form.value.is_default ? 1 : 0
+    }
+
     if (editingId.value) {
-      // 编辑
-      const index = addresses.value.findIndex(a => a.id === editingId.value)
-      if (index > -1) {
-        addresses.value[index] = {
-          ...addresses.value[index],
-          ...form.value,
-          region: regionText,
-          fullAddress: `${regionText} ${form.value.detail}`
-        }
-        ElMessage.success('地址修改成功')
-      }
+      await updateAddress(editingId.value, data)
+      ElMessage.success('地址修改成功')
     } else {
-      // 新增
-      const newAddress = {
-        id: Date.now(),
-        ...form.value,
-        region: regionText,
-        fullAddress: `${regionText} ${form.value.detail}`
-      }
-      addresses.value.push(newAddress)
+      await addAddress(data)
       ElMessage.success('地址添加成功')
     }
 
-    // 如果设为默认，取消其他默认地址
-    if (form.value.isDefault) {
-      addresses.value.forEach(addr => {
-        if (addr.id !== editingId.value) {
-          addr.isDefault = false
-        }
-      })
-    }
-
     dialogVisible.value = false
+    fetchAddresses()
   } catch (error) {
-    console.error('表单验证失败', error)
+    if (error.message) {
+      ElMessage.error(error.message)
+    }
   }
 }
 
@@ -245,21 +241,30 @@ const handleDelete = (address) => {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
-  }).then(() => {
-    const index = addresses.value.findIndex(a => a.id === address.id)
-    if (index > -1) {
-      addresses.value.splice(index, 1)
+  }).then(async () => {
+    try {
+      await deleteAddressApi(address.id)
       ElMessage.success('地址已删除')
+      fetchAddresses()
+    } catch (error) {
+      ElMessage.error(error.message || '删除失败')
     }
   }).catch(() => {})
 }
 
-const handleSetDefault = (address) => {
-  addresses.value.forEach(addr => {
-    addr.isDefault = addr.id === address.id
-  })
-  ElMessage.success('已设为默认地址')
+const handleSetDefault = async (address) => {
+  try {
+    await setDefaultAddress(address.id)
+    ElMessage.success('已设为默认地址')
+    fetchAddresses()
+  } catch (error) {
+    ElMessage.error(error.message || '设置失败')
+  }
 }
+
+onMounted(() => {
+  fetchAddresses()
+})
 </script>
 
 <style lang="scss" scoped>
