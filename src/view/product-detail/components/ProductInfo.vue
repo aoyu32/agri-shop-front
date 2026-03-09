@@ -173,7 +173,6 @@ const handleBuyNow = () => {
     specs: selectedSpecs.value,
     quantity: quantity.value
   })
-  ElMessage.success('正在跳转到结算页面...')
 }
 </script>
 

@@ -149,7 +149,9 @@
             </span>
           </div>
           <div class="footer-right">
-            <el-button size="large" @click="handleBack">返回购物车</el-button>
+            <el-button size="large" @click="handleBack">
+              {{ orderType === 'buy_now' ? '返回商品详情' : '返回购物车' }}
+            </el-button>
             <el-button type="primary" size="large" :loading="submitting" @click="handleSubmit">
               提交订单
             </el-button>
@@ -167,7 +169,7 @@ import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
 import { getCartList } from '@/apis/cart'
 import { createOrder } from '@/apis/order'
-import { getAddressList, getDefaultAddress } from '@/apis/address'
+import { getAddressList } from '@/apis/address'
 
 const route = useRoute()
 const router = useRouter()
@@ -181,13 +183,8 @@ const addresses = ref([])
 const selectedAddressId = ref(null)
 const selectedAddress = ref(null)
 const showAddressSelector = ref(false)
-
-// 收货地址表单（无地址时使用）
-const addressForm = ref({
-  receiver_name: userStore.userInfo.username || '',
-  receiver_phone: userStore.userInfo.phone || '',
-  receiver_address: userStore.userInfo.address || ''
-})
+const orderType = ref('cart') // 'cart' 或 'buy_now'
+const productId = ref(null) // 保存商品ID，用于返回商品详情页
 
 // 总金额
 const totalAmount = computed(() => {
@@ -238,34 +235,65 @@ const handleAddAddress = () => {
   router.push('/profile?menu=address')
 }
 
-// 获取购物车商品
+// 获取购物车商品或立即购买商品
 const fetchCartItems = async () => {
   try {
     loading.value = true
-    const cartIds = route.query.cart_ids?.split(',').map(id => parseInt(id)) || []
     
-    if (cartIds.length === 0) {
-      ElMessage.warning('请选择要购买的商品')
-      router.back()
-      return
-    }
+    // 判断是立即购买还是购物车结算
+    orderType.value = route.query.type || 'cart'
+    
+    if (orderType.value === 'buy_now') {
+      // 立即购买：从 sessionStorage 获取数据
+      const buyNowDataStr = sessionStorage.getItem('buyNowData')
+      if (!buyNowDataStr) {
+        ElMessage.warning('订单数据不存在')
+        router.back()
+        return
+      }
+      
+      const buyNowData = JSON.parse(buyNowDataStr)
+      productId.value = buyNowData.product_id // 保存商品ID
+      cartItems.value = [{
+        id: null, // 立即购买没有购物车ID
+        name: buyNowData.product_name,
+        spec: buyNowData.spec_label,
+        price: buyNowData.price,
+        quantity: buyNowData.quantity,
+        image: buyNowData.product_image,
+        product_id: buyNowData.product_id,
+        spec_id: buyNowData.spec_id,
+        shop_id: buyNowData.shop_id
+      }]
+    } else {
+      // 购物车结算
+      const cartIds = route.query.cart_ids?.split(',').map(id => parseInt(id)) || []
+      
+      if (cartIds.length === 0) {
+        ElMessage.warning('请选择要购买的商品')
+        router.back()
+        return
+      }
 
-    const res = await getCartList()
-    // 筛选出选中的商品
-    cartItems.value = res.data.list
-      .filter(item => cartIds.includes(item.id))
-      .map(item => ({
-        id: item.id,
-        name: item.product_name,
-        spec: item.spec_label,
-        price: item.price,
-        quantity: item.quantity,
-        image: item.product_image
-      }))
+      const res = await getCartList()
+      // 筛选出选中的商品
+      cartItems.value = res.data.list
+        .filter(item => cartIds.includes(item.id))
+        .map(item => ({
+          id: item.id,
+          name: item.product_name,
+          spec: item.spec_label,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.product_image,
+          product_id: item.product_id,
+          spec_id: item.spec_id
+        }))
 
-    if (cartItems.value.length === 0) {
-      ElMessage.warning('购物车商品不存在')
-      router.back()
+      if (cartItems.value.length === 0) {
+        ElMessage.warning('购物车商品不存在')
+        router.back()
+      }
     }
   } catch (error) {
     ElMessage.error(error.message || '获取商品信息失败')
@@ -291,17 +319,33 @@ const handleSubmit = async () => {
 
   try {
     submitting.value = true
-    const cartIds = route.query.cart_ids?.split(',').map(id => parseInt(id)) || []
     
-    const orderData = {
-      cart_ids: cartIds,
+    let orderData = {
       address_id: selectedAddressId.value,
       remark: remark.value
+    }
+
+    if (orderType.value === 'buy_now') {
+      // 立即购买：使用商品信息创建订单
+      const item = cartItems.value[0]
+      orderData.type = 'buy_now'
+      orderData.product_id = item.product_id
+      orderData.spec_id = item.spec_id
+      orderData.quantity = item.quantity
+    } else {
+      // 购物车结算
+      const cartIds = route.query.cart_ids?.split(',').map(id => parseInt(id)) || []
+      orderData.cart_ids = cartIds
     }
 
     const res = await createOrder(orderData)
 
     console.log('创建订单响应:', res)
+    
+    // 清除立即购买数据
+    if (orderType.value === 'buy_now') {
+      sessionStorage.removeItem('buyNowData')
+    }
     
     // 跳转到支付页面或订单列表
     if (res.data && res.data.orders && res.data.orders.length > 0) {
@@ -336,9 +380,15 @@ const handleSubmit = async () => {
   }
 }
 
-// 返回购物车
+// 返回上一页
 const handleBack = () => {
-  router.back()
+  if (orderType.value === 'buy_now' && productId.value) {
+    // 立即购买：返回商品详情页
+    router.push({ name: 'ProductDetail', params: { id: productId.value } })
+  } else {
+    // 购物车结算：返回购物车
+    router.push('/cart')
+  }
 }
 
 onMounted(() => {

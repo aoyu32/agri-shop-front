@@ -250,10 +250,56 @@ const handleAddToCart = async (data) => {
 }
 
 // 立即购买
-const handleBuyNow = (data) => {
+const handleBuyNow = async (data) => {
   console.log('立即购买:', data)
-  ElMessage.info('跳转到结算页面')
-  // TODO: 跳转到结算页面
+  
+  // 检查登录状态
+  if (!userStore.isLoggedIn) {
+    ElMessage.warning('请先登录')
+    router.push('/auth/login')
+    return
+  }
+
+  try {
+    // 从选中的规格中找到对应的 spec_id
+    let specId = null
+    if (data.specs && Object.keys(data.specs).length > 0) {
+      const specName = Object.keys(data.specs)[0]
+      const selectedSpec = data.specs[specName]
+      
+      if (selectedSpec && typeof selectedSpec === 'object' && selectedSpec.id) {
+        specId = selectedSpec.id
+      }
+    }
+
+    // 构建购买数据，存储到 sessionStorage
+    const buyNowData = {
+      product_id: product.value.id,
+      product_name: product.value.name,
+      product_image: product.value.images[0] || '',
+      spec_id: specId,
+      spec_label: specId ? data.specs[Object.keys(data.specs)[0]].label : null,
+      price: parseFloat(data.specs && Object.keys(data.specs).length > 0 
+        ? (product.value.price + data.specs[Object.keys(data.specs)[0]].price).toFixed(2)
+        : product.value.price),
+      quantity: data.quantity,
+      shop_id: product.value.shop.id
+    }
+
+    // 存储到 sessionStorage
+    sessionStorage.setItem('buyNowData', JSON.stringify(buyNowData))
+
+    // 跳转到订单确认页面
+    router.push({
+      path: '/order/confirm',
+      query: {
+        type: 'buy_now'
+      }
+    })
+  } catch (error) {
+    console.error('立即购买失败:', error)
+    ElMessage.error('操作失败，请重试')
+  }
 }
 
 // 点击推荐商品

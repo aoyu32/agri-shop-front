@@ -33,6 +33,9 @@ export const useUserStore = defineStore('user', () => {
   // 购物车数量
   const cartCount = ref(0)
 
+  // 计算属性：是否登录
+  const isLoggedIn = computed(() => !!token.value && userInfo.value.isLogin)
+
   // 计算属性：是否是商户
   const isMerchant = computed(() => userInfo.value.role === USER_ROLES.MERCHANT)
 
@@ -172,6 +175,7 @@ export const useUserStore = defineStore('user', () => {
     token,
     unreadMessages,
     cartCount,
+    isLoggedIn,
     isMerchant,
     isConsumer,
     isAdmin,
