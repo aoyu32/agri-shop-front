@@ -52,12 +52,12 @@
             <span class="icon-text">购物车</span>
           </div>
 
-          <div class="icon-item" @click="goToOrders">
+          <div v-if="userStore.isConsumer || (userStore.isMerchant && shopInfo.has_shop && shopInfo.shop.audit_status === 1)" class="icon-item" @click="goToOrders">
             <i class="iconfont icon-renwu"></i>
             <span class="icon-text">订单</span>
           </div>
 
-          <div class="icon-item message-item" @click="showMessageDrawer = true">
+          <div v-if="userStore.isConsumer || (userStore.isMerchant && shopInfo.has_shop && shopInfo.shop.audit_status === 1)" class="icon-item message-item" @click="showMessageDrawer = true">
             <el-badge :value="userStore.unreadMessages" :hidden="userStore.unreadMessages === 0" :max="99">
               <i class="iconfont icon-xiaoxi"></i>
             </el-badge>
@@ -75,9 +75,13 @@
                   <i class="iconfont icon-yonghu"></i>
                   个人中心
                 </el-dropdown-item>
-                <el-dropdown-item v-if="userStore.isMerchant" command="shop">
+                <el-dropdown-item v-if="userStore.isMerchant && shopInfo.has_shop && shopInfo.shop.audit_status === 1" command="shop">
                   <i class="iconfont icon-shangdian-2"></i>
                   我的店铺
+                </el-dropdown-item>
+                <el-dropdown-item v-if="userStore.isMerchant && (!shopInfo.has_shop || shopInfo.shop.audit_status !== 1)" command="shop">
+                  <i class="iconfont icon-shangdian-2"></i>
+                  {{ !shopInfo.has_shop ? '开通店铺' : (shopInfo.shop.audit_status === 0 ? '店铺审核中' : '重新申请店铺') }}
                 </el-dropdown-item>
                 <el-dropdown-item divided command="logout">
                   <i class="iconfont icon-tuichu"></i>
@@ -117,11 +121,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { Search } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
+import { getMyShop } from '@/apis/shop'
 import MessageDrawer from '@/components/message-drawer/index.vue'
 
 const router = useRouter()
@@ -140,6 +145,13 @@ const showMobileSearch = ref(false)
 
 // 消息抽屉状态
 const showMessageDrawer = ref(false)
+
+// 店铺信息
+const shopInfo = ref({
+  has_shop: false,
+  shop: null,
+  loaded: false // 添加加载状态标记
+})
 
 // 基础导航菜单
 const baseNavMenus = [
@@ -162,6 +174,33 @@ const navMenus = computed(() => {
   return baseNavMenus
 })
 
+// 获取店铺信息
+const fetchShopInfo = async () => {
+  if (!userStore.isMerchant) {
+    shopInfo.value = {
+      has_shop: false,
+      shop: null,
+      loaded: true
+    }
+    return
+  }
+  
+  try {
+    const res = await getMyShop()
+    shopInfo.value = {
+      ...res.data,
+      loaded: true
+    }
+  } catch (error) {
+    console.error('获取店铺信息失败:', error)
+    shopInfo.value = {
+      has_shop: false,
+      shop: null,
+      loaded: true
+    }
+  }
+}
+
 // 监听窗口大小变化，自动关闭移动端菜单
 const handleResize = () => {
   if (window.innerWidth > 768) {
@@ -173,7 +212,24 @@ const handleResize = () => {
 // 组件挂载时添加监听
 onMounted(() => {
   window.addEventListener('resize', handleResize)
+  // 如果是农户，获取店铺信息
+  if (userStore.isLoggedIn && userStore.isMerchant) {
+    fetchShopInfo()
+  }
 })
+
+// 监听用户登录状态变化
+watch(() => userStore.isLoggedIn, (newVal) => {
+  if (newVal && userStore.isMerchant) {
+    fetchShopInfo()
+  } else {
+    shopInfo.value = {
+      has_shop: false,
+      shop: null,
+      loaded: true
+    }
+  }
+}, { immediate: true })
 
 // 组件卸载时移除监听
 onUnmounted(() => {

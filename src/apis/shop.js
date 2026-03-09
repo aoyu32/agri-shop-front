@@ -23,3 +23,29 @@ export function getShopDetail(id) {
         params: { id }
     })
 }
+/**
+ * 申请开通店铺
+ * @param {Object} data
+ * @param {string} data.shop_name - 店铺名称
+ * @param {string} data.shop_logo - 店铺Logo
+ * @param {string} data.shop_banner - 店铺横幅
+ * @param {string} data.description - 店铺简介
+ * @param {string} data.location - 店铺地址
+ */
+export function applyShop(data) {
+    return request({
+        url: '/api/shop/apply',
+        method: 'post',
+        data
+    })
+}
+
+/**
+ * 获取我的店铺信息
+ */
+export function getMyShop() {
+    return request({
+        url: '/api/shop/my-shop',
+        method: 'get'
+    })
+}
