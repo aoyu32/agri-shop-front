@@ -1,7 +1,7 @@
 <template>
   <div class="product-info">
     <!-- 收藏按钮 -->
-    <div class="favorite-btn" :class="{ active: isFavorite }" @click="toggleFavorite">
+    <div class="favorite-btn" :class="{ active: isFavorite }" @click="toggleFavoriteHandler">
       <el-icon>
         <Star />
       </el-icon>
@@ -86,9 +86,11 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { StarFilled, ShoppingCart, Star } from '@element-plus/icons-vue'
+import { toggleFavorite, checkFavorite } from '@/apis/favorite'
+import { useUserStore } from '@/store/modules/user'
 
 const props = defineProps({
   product: {
@@ -99,8 +101,11 @@ const props = defineProps({
 
 const emit = defineEmits(['add-to-cart', 'buy-now'])
 
+const userStore = useUserStore()
+
 // 收藏状态
 const isFavorite = ref(false)
+const favoriteLoading = ref(false)
 
 // 选中的规格
 const selectedSpecs = ref({})
@@ -119,10 +124,47 @@ const currentPrice = computed(() => {
   return price.toFixed(2)
 })
 
+// 监听商品变化，检查收藏状态
+watch(() => props.product.id, async (newId) => {
+  if (newId && userStore.isLoggedIn) {
+    await checkFavoriteStatus()
+  }
+}, { immediate: true })
+
+// 检查收藏状态
+const checkFavoriteStatus = async () => {
+  if (!userStore.isLoggedIn) {
+    isFavorite.value = false
+    return
+  }
+
+  try {
+    const res = await checkFavorite({ product_id: props.product.id })
+    isFavorite.value = res.data.is_favorite
+  } catch (error) {
+    console.error('检查收藏状态失败:', error)
+  }
+}
+
 // 切换收藏
-const toggleFavorite = () => {
-  isFavorite.value = !isFavorite.value
-  ElMessage.success(isFavorite.value ? '收藏成功' : '取消收藏')
+const toggleFavoriteHandler = async () => {
+  if (!userStore.isLoggedIn) {
+    ElMessage.warning('请先登录')
+    return
+  }
+
+  if (favoriteLoading.value) return
+
+  try {
+    favoriteLoading.value = true
+    const res = await toggleFavorite({ product_id: props.product.id })
+    isFavorite.value = res.data.is_favorite
+    ElMessage.success(res.message || (isFavorite.value ? '收藏成功' : '取消收藏'))
+  } catch (error) {
+    ElMessage.error(error.message || '操作失败')
+  } finally {
+    favoriteLoading.value = false
+  }
 }
 
 // 判断规格是否选中
