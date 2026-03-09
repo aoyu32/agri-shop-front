@@ -2,29 +2,56 @@
   <div class="footprint-list">
     <div class="list-header">
       <h3>我的足迹</h3>
-      <el-button v-if="footprints.length > 0" type="danger" text @click="handleClearAll">
-        清空足迹
-      </el-button>
+      <div class="header-actions">
+        <span v-if="statistics.total > 0" class="statistics">
+          共 {{ statistics.total }} 条浏览记录
+        </span>
+        <el-button v-if="footprints.length > 0" type="danger" text @click="handleClearAll">
+          清空足迹
+        </el-button>
+      </div>
     </div>
 
-    <div v-if="footprints.length === 0" class="empty-state">
+    <!-- 加载状态 -->
+    <div v-if="loading" class="loading-state">
+      <el-skeleton :rows="5" animated />
+    </div>
+
+    <!-- 空状态 -->
+    <div v-else-if="footprints.length === 0" class="empty-state">
       <i class="iconfont icon-time"></i>
       <p>还没有浏览记录</p>
       <el-button type="primary" @click="goShopping">去逛逛</el-button>
     </div>
 
+    <!-- 足迹列表 -->
     <div v-else class="footprint-timeline">
-      <div v-for="group in groupedFootprints" :key="group.date" class="date-group">
-        <div class="date-header">{{ group.date }}</div>
+      <div v-for="group in footprints" :key="group.date" class="date-group">
+        <div class="date-header">{{ group.date_label }}</div>
         <div class="footprint-grid">
           <div v-for="item in group.items" :key="item.id" class="footprint-item">
             <div class="item-image" @click="handleViewProduct(item)">
-              <img :src="item.image" :alt="item.name" />
+              <img :src="item.product_image" :alt="item.product_name" />
+              <!-- 商品状态标签 -->
+              <div v-if="item.status !== 'on_sale'" class="status-tag">
+                {{ item.status === 'off_sale' ? '已下架' : '已售罄' }}
+              </div>
             </div>
             <div class="item-info">
-              <div class="item-name" @click="handleViewProduct(item)">{{ item.name }}</div>
-              <div class="item-price">¥{{ item.price }}</div>
-              <div class="item-time">{{ item.time }}</div>
+              <div class="item-name" @click="handleViewProduct(item)" :title="item.product_name">
+                {{ item.product_name }}
+              </div>
+              <div v-if="item.product_subtitle" class="item-subtitle">
+                {{ item.product_subtitle }}
+              </div>
+              <div class="price-info">
+                <span class="item-price">¥{{ item.price }}</span>
+                <span v-if="item.original_price" class="original-price">¥{{ item.original_price }}</span>
+              </div>
+              <div class="item-meta">
+                <span class="item-time">{{ formatTime(item.last_view_time) }}</span>
+                <span v-if="item.view_count > 1" class="view-count">浏览 {{ item.view_count }} 次</span>
+              </div>
             </div>
             <el-button type="danger" text size="small" @click="handleRemove(item)">
               删除
@@ -33,102 +60,145 @@
         </div>
       </div>
     </div>
+
+    <!-- 分页 -->
+    <div v-if="total > limit" class="pagination">
+      <el-pagination
+        v-model:current-page="page"
+        v-model:page-size="limit"
+        :total="total"
+        :page-sizes="[20, 50, 100]"
+        layout="total, sizes, prev, pager, next, jumper"
+        @size-change="handleSizeChange"
+        @current-change="handlePageChange"
+      />
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { getFootprintListByDate, deleteFootprint, clearFootprint, getFootprintStatistics } from '@/apis/footprint'
 
 const router = useRouter()
 
-const footprints = ref([
-  {
-    id: 1,
-    name: '新鲜有机西红柿',
-    price: '12.80',
-    image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=200&h=200&fit=crop',
-    time: '10:30',
-    date: '2026-01-22'
-  },
-  {
-    id: 2,
-    name: '农家土鸡蛋',
-    price: '45.00',
-    image: 'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=200&h=200&fit=crop',
-    time: '09:15',
-    date: '2026-01-22'
-  },
-  {
-    id: 3,
-    name: '新鲜黄瓜',
-    price: '8.50',
-    image: 'https://images.unsplash.com/photo-1604977042946-1eecc30f269e?w=200&h=200&fit=crop',
-    time: '18:45',
-    date: '2026-01-21'
-  },
-  {
-    id: 4,
-    name: '有机大米',
-    price: '89.00',
-    image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=200&h=200&fit=crop',
-    time: '14:20',
-    date: '2026-01-21'
-  }
-])
-
-// 按日期分组
-const groupedFootprints = computed(() => {
-  const groups = {}
-  footprints.value.forEach(item => {
-    if (!groups[item.date]) {
-      groups[item.date] = []
-    }
-    groups[item.date].push(item)
-  })
-
-  return Object.keys(groups).map(date => ({
-    date: formatDate(date),
-    items: groups[date]
-  }))
+const loading = ref(false)
+const footprints = ref([])
+const page = ref(1)
+const limit = ref(20)
+const total = ref(0)
+const statistics = ref({
+  total: 0,
+  today: 0,
+  week: 0
 })
 
-const formatDate = (dateStr) => {
-  const today = new Date().toISOString().split('T')[0]
-  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
-  
-  if (dateStr === today) return '今天'
-  if (dateStr === yesterday) return '昨天'
-  return dateStr
-}
-
-const handleViewProduct = (item) => {
-  router.push(`/product/${item.id}`)
-}
-
-const handleRemove = (item) => {
-  const index = footprints.value.findIndex(f => f.id === item.id)
-  if (index > -1) {
-    footprints.value.splice(index, 1)
-    ElMessage.success('已删除')
+// 获取足迹列表
+const fetchFootprints = async () => {
+  try {
+    loading.value = true
+    const res = await getFootprintListByDate({
+      page: page.value,
+      limit: limit.value
+    })
+    
+    footprints.value = res.data.list
+    total.value = res.data.total
+  } catch (error) {
+    console.error('获取足迹列表失败:', error)
+    ElMessage.error(error.message || '获取足迹列表失败')
+  } finally {
+    loading.value = false
   }
 }
 
-const handleClearAll = () => {
-  ElMessageBox.confirm('确定要清空所有足迹吗？', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {
-    footprints.value = []
-    ElMessage.success('已清空足迹')
-  }).catch(() => {})
+// 获取统计信息
+const fetchStatistics = async () => {
+  try {
+    const res = await getFootprintStatistics()
+    statistics.value = res.data
+  } catch (error) {
+    console.error('获取统计失败:', error)
+  }
 }
 
+// 格式化时间
+const formatTime = (datetime) => {
+  const date = new Date(datetime)
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${hours}:${minutes}`
+}
+
+// 查看商品详情
+const handleViewProduct = (item) => {
+  router.push({ name: 'ProductDetail', params: { id: item.product_id } })
+}
+
+// 删除单条足迹
+const handleRemove = async (item) => {
+  try {
+    await deleteFootprint({ id: item.id })
+    ElMessage.success('已删除')
+    
+    // 重新加载列表
+    await fetchFootprints()
+    await fetchStatistics()
+  } catch (error) {
+    console.error('删除失败:', error)
+    ElMessage.error(error.message || '删除失败')
+  }
+}
+
+// 清空所有足迹
+const handleClearAll = async () => {
+  try {
+    await ElMessageBox.confirm('确定要清空所有足迹吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+
+    await clearFootprint()
+    ElMessage.success('已清空足迹')
+    
+    // 重新加载列表
+    footprints.value = []
+    total.value = 0
+    page.value = 1
+    statistics.value = { total: 0, today: 0, week: 0 }
+    await fetchFootprints()
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('清空失败:', error)
+      ElMessage.error(error.message || '清空失败')
+    }
+  }
+}
+
+// 去逛逛
 const goShopping = () => {
   router.push('/home')
 }
+
+// 分页大小改变
+const handleSizeChange = () => {
+  page.value = 1
+  fetchFootprints()
+}
+
+// 页码改变
+const handlePageChange = () => {
+  fetchFootprints()
+}
+
+// 页面加载时获取数据
+onMounted(() => {
+  fetchFootprints()
+  fetchStatistics()
+})
 </script>
 
 <style lang="scss" scoped>
@@ -147,6 +217,21 @@ const goShopping = () => {
       font-weight: 600;
       color: var(--text-primary-color);
     }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      .statistics {
+        font-size: 14px;
+        color: var(--text-secondary-color);
+      }
+    }
+  }
+
+  .loading-state {
+    padding: 20px 0;
   }
 
   .empty-state {
@@ -198,6 +283,7 @@ const goShopping = () => {
           }
 
           .item-image {
+            position: relative;
             width: 80px;
             height: 80px;
             flex-shrink: 0;
@@ -209,38 +295,92 @@ const goShopping = () => {
               object-fit: cover;
               border-radius: 6px;
             }
+
+            .status-tag {
+              position: absolute;
+              top: 4px;
+              right: 4px;
+              padding: 2px 8px;
+              background-color: rgba(0, 0, 0, 0.6);
+              color: #fff;
+              font-size: 10px;
+              border-radius: 3px;
+            }
           }
 
           .item-info {
             flex: 1;
+            min-width: 0;
 
             .item-name {
               font-size: 15px;
               font-weight: 500;
               color: var(--text-primary-color);
-              margin-bottom: 6px;
+              margin-bottom: 4px;
               cursor: pointer;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
 
               &:hover {
                 color: var(--theme-primary-color);
               }
             }
 
-            .item-price {
-              font-size: 16px;
-              font-weight: 600;
-              color: var(--theme-primary-color);
-              margin-bottom: 4px;
-            }
-
-            .item-time {
+            .item-subtitle {
               font-size: 12px;
               color: var(--text-secondary-color);
+              margin-bottom: 6px;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+
+            .price-info {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              margin-bottom: 4px;
+
+              .item-price {
+                font-size: 16px;
+                font-weight: 600;
+                color: #f5222d;
+              }
+
+              .original-price {
+                font-size: 12px;
+                color: var(--text-placeholder-color);
+                text-decoration: line-through;
+              }
+            }
+
+            .item-meta {
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              font-size: 12px;
+              color: var(--text-secondary-color);
+
+              .view-count {
+                &::before {
+                  content: '•';
+                  margin-right: 8px;
+                }
+              }
             }
           }
         }
       }
     }
+  }
+
+  .pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
   }
 }
 </style>

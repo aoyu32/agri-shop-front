@@ -164,6 +164,11 @@ const loadProductData = async () => {
 
       // 加载推荐商品
       loadRecommendProducts(data.category_id, data.id)
+
+      // 记录浏览足迹（仅登录用户）
+      if (userStore.isLoggedIn) {
+        recordFootprint(data.id)
+      }
     } else {
       ElMessage.error(res.message || '加载商品详情失败')
     }
@@ -172,6 +177,17 @@ const loadProductData = async () => {
     ElMessage.error('加载商品详情失败')
   } finally {
     loading.value = false
+  }
+}
+
+// 记录浏览足迹
+const recordFootprint = async (productId) => {
+  try {
+    const { addFootprint } = await import('@/apis/footprint')
+    await addFootprint({ product_id: productId })
+  } catch (error) {
+    // 静默失败，不影响用户体验
+    console.error('记录足迹失败:', error)
   }
 }
 
