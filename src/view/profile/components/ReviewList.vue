@@ -1,48 +1,88 @@
 <template>
-  <div class="review-list">
+  <div class="review-list" v-loading="loading">
     <div class="list-header">
       <h3>{{ pageTitle }}</h3>
     </div>
 
-    <div v-if="filteredReviews.length === 0" class="empty-state">
+    <div v-if="reviews.length === 0" class="empty-state">
       <i class="iconfont icon-pinglun"></i>
       <p>{{ emptyText }}</p>
     </div>
 
-    <div v-else class="review-items">
-      <div v-for="review in filteredReviews" :key="review.id" class="review-card">
+    <!-- 待评价列表 -->
+    <div v-else-if="route.query.menu === 'review-pending'" class="review-items">
+      <div v-for="order in reviews" :key="order.order_id" class="review-card">
         <div class="card-header">
           <div class="order-info">
-            <span class="order-no">订单号：{{ review.orderNo }}</span>
-            <span class="order-time">下单时间：{{ review.orderTime }}</span>
+            <span class="order-no">订单号：{{ order.order_no }}</span>
+            <span class="shop-name">店铺：{{ order.shop_name }}</span>
+            <span class="order-time">完成时间：{{ order.complete_time }}</span>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div v-for="item in order.items" :key="item.order_item_id" class="product-info">
+            <img :src="item.product_image" :alt="item.product_name" />
+            <div class="info">
+              <div class="product-name">{{ item.product_name }}</div>
+              <div class="product-spec">{{ item.spec_label }} × {{ item.quantity }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <div class="review-action">
+            <el-button type="primary" @click="handleReview(order)">立即评价</el-button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 已评价列表 -->
+    <div v-else class="review-items">
+      <div v-for="review in reviews" :key="review.id" class="review-card">
+        <div class="card-header">
+          <div class="order-info">
+            <span class="shop-name">店铺：{{ review.shop_name }}</span>
+            <span class="review-time">评价时间：{{ review.created_at }}</span>
           </div>
         </div>
 
         <div class="card-body">
           <div class="product-info">
-            <img :src="review.product.image" :alt="review.product.name" />
+            <img :src="review.product_image" :alt="review.product_name" />
             <div class="info">
-              <div class="product-name">{{ review.product.name }}</div>
-              <div class="product-spec">{{ review.product.spec }}</div>
+              <div class="product-name">{{ review.product_name }}</div>
             </div>
           </div>
 
-          <div v-if="review.reviewed" class="review-content">
+          <div class="review-content">
             <div class="review-header">
               <el-rate v-model="review.rating" disabled />
-              <div class="review-time">评价时间：{{ review.reviewTime }}</div>
             </div>
             <div class="review-text">{{ review.content }}</div>
+            <div v-if="review.images && review.images.length > 0" class="review-images">
+              <el-image
+                v-for="(image, index) in review.images"
+                :key="index"
+                :src="image"
+                :preview-src-list="review.images"
+                :initial-index="index"
+                fit="cover"
+                class="review-image"
+              />
+            </div>
+            <div v-if="review.reply_content" class="shop-reply">
+              <div class="reply-label">商家回复：</div>
+              <div class="reply-content">{{ review.reply_content }}</div>
+              <div class="reply-time">{{ review.reply_time }}</div>
+            </div>
           </div>
         </div>
 
         <div class="card-footer">
-          <div v-if="!review.reviewed" class="review-action">
-            <el-button type="primary" @click="handleReview(review)">立即评价</el-button>
-          </div>
-          <div v-else class="review-actions">
-            <el-button @click="handleEditReview(review)">修改评价</el-button>
-            <el-button @click="handleDeleteReview(review)">删除评价</el-button>
+          <div class="review-actions">
+            <el-button type="danger" size="small" @click="handleDeleteReview(review)">删除评价</el-button>
           </div>
         </div>
       </div>
@@ -51,145 +91,108 @@
     <!-- 评价弹窗 -->
     <el-dialog
       v-model="reviewDialogVisible"
-      :title="isEditMode ? '修改评价' : '发表评价'"
-      width="600px"
+      title="发表评价"
+      width="700px"
+      :close-on-click-modal="false"
     >
-      <div v-if="currentReview" class="review-dialog">
-        <div class="product-info">
-          <img :src="currentReview.product.image" :alt="currentReview.product.name" />
-          <div class="info">
-            <div class="product-name">{{ currentReview.product.name }}</div>
-            <div class="product-spec">{{ currentReview.product.spec }}</div>
-          </div>
+      <div v-if="currentOrder" class="review-dialog">
+        <div class="order-info-header">
+          <span>订单号：{{ currentOrder.order_no }}</span>
+          <span>店铺：{{ currentOrder.shop_name }}</span>
         </div>
 
-        <div class="review-form">
-          <div class="form-item">
-            <h4>商品评分</h4>
-            <el-rate v-model="reviewForm.rating" :colors="['#f5222d', '#faad14', '#52c41a']" size="large" />
+        <div v-for="(item, index) in reviewForm.reviews" :key="item.order_item_id" class="review-item">
+          <div class="product-info">
+            <img :src="item.product_image" :alt="item.product_name" />
+            <div class="info">
+              <div class="product-name">{{ item.product_name }}</div>
+              <div class="product-spec">{{ item.spec_label }}</div>
+            </div>
           </div>
 
-          <div class="form-item">
-            <h4>评价内容</h4>
-            <el-input
-              v-model="reviewForm.content"
-              type="textarea"
-              :rows="6"
-              placeholder="请分享您的使用感受，帮助其他买家更好地了解商品"
-              maxlength="500"
-              show-word-limit
-            />
-          </div>
+          <div class="review-form">
+            <div class="form-item">
+              <h4>商品评分</h4>
+              <el-rate v-model="item.rating" :colors="['#f5222d', '#faad14', '#52c41a']" size="large" />
+            </div>
 
-          <div class="form-item">
-            <h4>上传图片（选填，最多5张）</h4>
-            <div class="image-upload-area">
-              <div v-for="(image, index) in reviewForm.images" :key="index" class="image-item">
-                <img :src="image.url" :alt="image.name" />
-                <div class="image-mask">
-                  <i class="iconfont icon-shanchu" @click="handleRemoveImage(index)"></i>
+            <div class="form-item">
+              <h4>评价内容</h4>
+              <el-input
+                v-model="item.content"
+                type="textarea"
+                :rows="4"
+                placeholder="请分享您的使用感受，帮助其他买家更好地了解商品"
+                maxlength="500"
+                show-word-limit
+              />
+            </div>
+
+            <div class="form-item">
+              <h4>上传图片（选填，最多5张）</h4>
+              <div class="image-upload-area">
+                <div v-for="(image, imgIndex) in item.images" :key="imgIndex" class="image-item">
+                  <img :src="image" alt="评价图片" />
+                  <div class="image-mask">
+                    <i class="iconfont icon-shanchu" @click="handleRemoveImage(index, imgIndex)"></i>
+                  </div>
                 </div>
+                <el-upload
+                  v-if="item.images.length < 5"
+                  class="image-uploader"
+                  :show-file-list="false"
+                  :before-upload="(file) => handleImageUpload(file, index)"
+                  accept="image/*"
+                >
+                  <div class="upload-trigger">
+                    <i class="iconfont icon-tupian"></i>
+                    <span>上传图片</span>
+                  </div>
+                </el-upload>
               </div>
-              <el-upload
-                v-if="reviewForm.images.length < 5"
-                class="image-uploader"
-                :show-file-list="false"
-                :before-upload="handleImageUpload"
-                accept="image/*"
-              >
-                <div class="upload-trigger">
-                  <i class="iconfont icon-tupian"></i>
-                  <span>上传图片</span>
-                </div>
-              </el-upload>
             </div>
-            <div class="upload-tips">
-              <i class="iconfont icon-tishi"></i>
-              <span>支持jpg、png格式，单张图片不超过5MB</span>
+
+            <div class="form-item">
+              <el-checkbox v-model="item.is_anonymous" :true-label="1" :false-label="0">
+                匿名评价
+              </el-checkbox>
             </div>
           </div>
+
+          <el-divider v-if="index < reviewForm.reviews.length - 1" />
         </div>
       </div>
       <template #footer>
         <el-button @click="reviewDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmitReview">
-          {{ isEditMode ? '保存修改' : '提交评价' }}
-        </el-button>
+        <el-button type="primary" @click="handleSubmitReview">提交评价</el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { getPendingReviewList, submitReview, getMyReviews, deleteReview } from '@/apis/review'
+import { uploadFile } from '@/apis/oss'
 
 const route = useRoute()
+const router = useRouter()
 
 // 评价弹窗
 const reviewDialogVisible = ref(false)
-const currentReview = ref(null)
-const isEditMode = ref(false)
+const currentOrder = ref(null)
 const reviewForm = ref({
-  rating: 5,
-  content: '',
-  images: []
+  reviews: []
 })
 
-// 模拟评价数据
-const reviews = ref([
-  {
-    id: 1,
-    reviewed: false,
-    orderNo: '202601220001',
-    orderTime: '2026-01-22 10:30:00',
-    product: {
-      name: '新鲜有机西红柿',
-      spec: '500g/份',
-      image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=100&h=100&fit=crop'
-    }
-  },
-  {
-    id: 2,
-    reviewed: false,
-    orderNo: '202601210002',
-    orderTime: '2026-01-21 15:20:00',
-    product: {
-      name: '新鲜黄瓜',
-      spec: '1kg/份',
-      image: 'https://images.unsplash.com/photo-1604977042946-1eecc30f269e?w=100&h=100&fit=crop'
-    }
-  },
-  {
-    id: 3,
-    reviewed: true,
-    rating: 5,
-    content: '非常新鲜，品质很好，下次还会购买！',
-    reviewTime: '2026-01-20 14:30:00',
-    orderNo: '202601190003',
-    orderTime: '2026-01-19 14:30:00',
-    product: {
-      name: '农家土鸡蛋',
-      spec: '30枚/盒',
-      image: 'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=100&h=100&fit=crop'
-    }
-  },
-  {
-    id: 4,
-    reviewed: true,
-    rating: 4,
-    content: '质量不错，物流也很快',
-    reviewTime: '2026-01-18 10:15:00',
-    orderNo: '202601170004',
-    orderTime: '2026-01-17 09:20:00',
-    product: {
-      name: '有机大米',
-      spec: '5kg/袋',
-      image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=100&h=100&fit=crop'
-    }
-  }
-])
+// 数据加载
+const loading = ref(false)
+const reviews = ref([])
+const currentPage = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 
 const pageTitle = computed(() => {
   return route.query.menu === 'review-pending' ? '待评价' : '已评价'
@@ -199,34 +202,83 @@ const emptyText = computed(() => {
   return route.query.menu === 'review-pending' ? '暂无待评价商品' : '暂无评价记录'
 })
 
-const filteredReviews = computed(() => {
-  const isPending = route.query.menu === 'review-pending'
-  return reviews.value.filter(r => r.reviewed !== isPending)
+// 获取评价列表
+const fetchReviews = async () => {
+  loading.value = true
+  try {
+    const params = {
+      page: currentPage.value,
+      page_size: pageSize.value
+    }
+
+    let res
+    if (route.query.menu === 'review-pending') {
+      // 获取待评价订单
+      res = await getPendingReviewList(params)
+      reviews.value = res.data.list
+      
+      // 如果URL中有orderId参数，自动打开该订单的评价弹窗
+      if (route.query.orderId) {
+        const order = reviews.value.find(o => o.order_id == route.query.orderId)
+        if (order) {
+          handleReview(order)
+          // 清除URL中的orderId参数
+          router.replace({ query: { ...route.query, orderId: undefined } })
+        }
+      }
+    } else {
+      // 获取已评价列表
+      res = await getMyReviews(params)
+      reviews.value = res.data.list
+      
+      // 调试：打印评价数据查看图片字段
+      console.log('已评价列表数据:', reviews.value)
+      reviews.value.forEach((review, index) => {
+        console.log(`评价${index + 1}:`, {
+          id: review.id,
+          product_name: review.product_name,
+          images: review.images,
+          images_length: review.images?.length || 0,
+          images_content: JSON.stringify(review.images)
+        })
+      })
+    }
+    
+    total.value = res.data.total
+  } catch (error) {
+    console.error('获取评价列表失败:', error)
+    ElMessage.error(error.message || '获取评价列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 监听路由变化
+watch(() => route.query.menu, () => {
+  currentPage.value = 1
+  fetchReviews()
 })
 
-const handleReview = (review) => {
-  currentReview.value = review
-  reviewForm.value = {
+// 打开评价弹窗
+const handleReview = (order) => {
+  currentOrder.value = order
+  // 为每个商品初始化评价表单
+  reviewForm.value.reviews = order.items.map(item => ({
+    order_item_id: item.order_item_id,
+    product_id: item.product_id,
+    product_name: item.product_name,
+    product_image: item.product_image,
+    spec_label: item.spec_label,
     rating: 5,
     content: '',
-    images: []
-  }
-  isEditMode.value = false
+    images: [],
+    is_anonymous: 0
+  }))
   reviewDialogVisible.value = true
 }
 
-const handleEditReview = (review) => {
-  currentReview.value = review
-  reviewForm.value = {
-    rating: review.rating,
-    content: review.content,
-    images: review.images || []
-  }
-  isEditMode.value = true
-  reviewDialogVisible.value = true
-}
-
-const handleImageUpload = (file) => {
+// 上传图片
+const handleImageUpload = async (file, reviewIndex) => {
   // 检查文件大小（5MB）
   const isLt5M = file.size / 1024 / 1024 < 5
   if (!isLt5M) {
@@ -242,67 +294,96 @@ const handleImageUpload = (file) => {
   }
 
   // 检查数量
-  if (reviewForm.value.images.length >= 5) {
+  if (reviewForm.value.reviews[reviewIndex].images.length >= 5) {
     ElMessage.warning('最多只能上传5张图片')
     return false
   }
 
-  // 模拟图片上传
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    reviewForm.value.images.push({
-      url: e.target.result,
-      name: file.name
-    })
+  try {
+    // 调用 OSS 上传接口
+    const res = await uploadFile(file, 'review')
+    
+    console.log('图片上传成功:', res.data)
+    reviewForm.value.reviews[reviewIndex].images.push(res.data.url)
+    console.log(`评价${reviewIndex + 1}当前图片列表:`, reviewForm.value.reviews[reviewIndex].images)
+    
+    ElMessage.success('图片上传成功')
+  } catch (error) {
+    console.error('图片上传失败:', error)
+    ElMessage.error(error.message || '图片上传失败')
   }
-  reader.readAsDataURL(file)
+  
   return false
 }
 
-const handleRemoveImage = (index) => {
-  reviewForm.value.images.splice(index, 1)
+// 删除图片
+const handleRemoveImage = (reviewIndex, imageIndex) => {
+  reviewForm.value.reviews[reviewIndex].images.splice(imageIndex, 1)
 }
 
-const handleSubmitReview = () => {
-  if (!reviewForm.value.content.trim()) {
-    ElMessage.warning('请填写评价内容')
+// 提交评价
+const handleSubmitReview = async () => {
+  // 验证所有商品都有评价内容
+  const hasEmptyContent = reviewForm.value.reviews.some(r => !r.content.trim())
+  if (hasEmptyContent) {
+    ElMessage.warning('请为所有商品填写评价内容')
     return
   }
 
-  const review = currentReview.value
-  const now = new Date().toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  }).replace(/\//g, '-')
-
-  review.reviewed = true
-  review.rating = reviewForm.value.rating
-  review.content = reviewForm.value.content
-  review.images = [...reviewForm.value.images]
-  review.reviewTime = now
-
-  reviewDialogVisible.value = false
-  ElMessage.success(isEditMode.value ? '评价修改成功' : '评价提交成功')
+  try {
+    const reviewData = reviewForm.value.reviews.map(r => ({
+      order_item_id: r.order_item_id,
+      rating: r.rating,
+      content: r.content,
+      images: r.images,
+      is_anonymous: r.is_anonymous
+    }))
+    
+    // 调试：打印提交的评价数据
+    console.log('提交评价数据:', {
+      order_id: currentOrder.value.order_id,
+      reviews: reviewData
+    })
+    reviewData.forEach((r, index) => {
+      console.log(`评价${index + 1} - images:`, r.images, 'count:', r.images.length)
+    })
+    
+    await submitReview({
+      order_id: currentOrder.value.order_id,
+      reviews: reviewData
+    })
+    
+    ElMessage.success('评价提交成功')
+    reviewDialogVisible.value = false
+    fetchReviews()
+  } catch (error) {
+    console.error('提交评价失败:', error)
+    ElMessage.error(error.message || '提交评价失败')
+  }
 }
 
+// 删除评价
 const handleDeleteReview = (review) => {
   ElMessageBox.confirm('确定要删除该评价吗？删除后无法恢复。', '删除评价', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
-  }).then(() => {
-    review.reviewed = false
-    review.rating = 0
-    review.content = ''
-    review.images = []
-    review.reviewTime = ''
-    ElMessage.success('评价已删除')
+  }).then(async () => {
+    try {
+      await deleteReview({ review_id: review.id })
+      ElMessage.success('删除成功')
+      fetchReviews()
+    } catch (error) {
+      console.error('删除评价失败:', error)
+      ElMessage.error(error.message || '删除评价失败')
+    }
   }).catch(() => {})
 }
+
+// 初始化
+onMounted(() => {
+  fetchReviews()
+})
 </script>
 
 <style lang="scss" scoped>
@@ -440,17 +521,36 @@ const handleDeleteReview = (review) => {
 
 // 评价弹窗样式
 .review-dialog {
+  .order-info-header {
+    display: flex;
+    gap: 24px;
+    padding: 12px 16px;
+    background-color: var(--bg-gray);
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: var(--text-secondary-color);
+  }
+
+  .review-item {
+    margin-bottom: 24px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
   .product-info {
     display: flex;
     gap: 12px;
-    padding: 16px;
+    padding: 12px;
     background-color: var(--bg-gray);
     border-radius: 8px;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
 
     img {
-      width: 80px;
-      height: 80px;
+      width: 60px;
+      height: 60px;
       object-fit: cover;
       border-radius: 6px;
     }
@@ -459,14 +559,14 @@ const handleDeleteReview = (review) => {
       flex: 1;
 
       .product-name {
-        font-size: 15px;
+        font-size: 14px;
         font-weight: 500;
         color: var(--text-primary-color);
         margin-bottom: 6px;
       }
 
       .product-spec {
-        font-size: 13px;
+        font-size: 12px;
         color: var(--text-secondary-color);
       }
     }
@@ -474,15 +574,15 @@ const handleDeleteReview = (review) => {
 
   .review-form {
     .form-item {
-      margin-bottom: 24px;
+      margin-bottom: 16px;
 
       &:last-child {
         margin-bottom: 0;
       }
 
       h4 {
-        margin: 0 0 12px 0;
-        font-size: 15px;
+        margin: 0 0 8px 0;
+        font-size: 14px;
         font-weight: 600;
         color: var(--text-primary-color);
       }
@@ -492,7 +592,6 @@ const handleDeleteReview = (review) => {
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
-      margin-bottom: 8px;
 
       .image-item {
         position: relative;
@@ -576,18 +675,47 @@ const handleDeleteReview = (review) => {
         }
       }
     }
+  }
+}
 
-    .upload-tips {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      color: var(--text-secondary-color);
+.review-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
 
-      i {
-        font-size: 14px;
-      }
-    }
+  .review-image {
+    width: 80px;
+    height: 80px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+}
+
+.shop-reply {
+  margin-top: 12px;
+  padding: 12px;
+  background-color: #fff9e6;
+  border-radius: 6px;
+  border-left: 3px solid var(--theme-primary-color);
+
+  .reply-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary-color);
+    margin-bottom: 6px;
+  }
+
+  .reply-content {
+    font-size: 13px;
+    color: var(--text-primary-color);
+    line-height: 1.6;
+    margin-bottom: 6px;
+  }
+
+  .reply-time {
+    font-size: 12px;
+    color: var(--text-secondary-color);
   }
 }
 </style>

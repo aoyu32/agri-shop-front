@@ -49,8 +49,11 @@
             <el-button v-if="order.status === 'shipped'" type="primary" size="small" @click="handleConfirm(order)">
               确认收货
             </el-button>
-            <el-button v-if="order.status === 'completed'" type="primary" size="small" @click="handleReview(order)">
+            <el-button v-if="order.status === 'completed' && !order.is_reviewed" type="primary" size="small" @click="handleReview(order)">
               去评价
+            </el-button>
+            <el-button v-if="order.status === 'completed' && order.is_reviewed" type="info" size="small" disabled>
+              已评价
             </el-button>
             <el-button size="small" @click="handleViewDetail(order)">查看详情</el-button>
             <el-button v-if="order.status === 'pending' || order.status === 'paid'" size="small" @click="handleCancel(order)">
@@ -276,7 +279,14 @@ const handleConfirm = (order) => {
 
 // 去评价
 const handleReview = (order) => {
-  ElMessage.info('评价功能开发中')
+  // 跳转到待评价页面，并传递订单ID
+  router.push({
+    path: '/profile',
+    query: {
+      menu: 'review-pending',
+      orderId: order.id
+    }
+  })
 }
 
 // 查看详情
