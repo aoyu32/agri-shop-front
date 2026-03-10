@@ -95,13 +95,13 @@
     </el-card>
 
     <!-- 发货对话框 -->
-    <el-dialog v-model="shipDialogVisible" title="订单发货" width="500px">
+    <el-dialog v-model="shipDialogVisible" :title="shipForm.viewMode ? '物流信息' : '订单发货'" width="500px">
       <el-form :model="shipForm" label-width="100px">
         <el-form-item label="订单号">
           <el-input v-model="shipForm.orderNo" disabled />
         </el-form-item>
         <el-form-item label="物流公司" required>
-          <el-select v-model="shipForm.logistics" placeholder="请选择物流公司" style="width: 100%">
+          <el-select v-if="!shipForm.viewMode" v-model="shipForm.logistics" placeholder="请选择物流公司" style="width: 100%">
             <el-option label="顺丰速运" value="顺丰速运" />
             <el-option label="中通快递" value="中通快递" />
             <el-option label="圆通速递" value="圆通速递" />
@@ -109,14 +109,15 @@
             <el-option label="韵达快递" value="韵达快递" />
             <el-option label="邮政EMS" value="邮政EMS" />
           </el-select>
+          <el-input v-else v-model="shipForm.logistics" disabled />
         </el-form-item>
         <el-form-item label="物流单号" required>
-          <el-input v-model="shipForm.trackingNo" placeholder="请输入物流单号" />
+          <el-input v-model="shipForm.trackingNo" :placeholder="shipForm.viewMode ? '' : '请输入物流单号'" :disabled="shipForm.viewMode" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="shipDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="confirmShip">确认发货</el-button>
+        <el-button @click="shipDialogVisible = false">{{ shipForm.viewMode ? '关闭' : '取消' }}</el-button>
+        <el-button v-if="!shipForm.viewMode" type="primary" @click="confirmShip">确认发货</el-button>
       </template>
     </el-dialog>
 
@@ -136,6 +137,14 @@
           <div class="detail-item">
             <span class="label">订单状态：</span>
             <el-tag :type="getStatusType(currentOrder.status)">{{ getStatusText(currentOrder.status) }}</el-tag>
+          </div>
+          <div v-if="currentOrder.logistics" class="detail-item">
+            <span class="label">物流公司：</span>
+            <span class="value">{{ currentOrder.logistics }}</span>
+          </div>
+          <div v-if="currentOrder.trackingNo" class="detail-item">
+            <span class="label">物流单号：</span>
+            <span class="value">{{ currentOrder.trackingNo }}</span>
           </div>
           <div v-if="currentOrder.refundType" class="detail-item">
             <span class="label">退款类型：</span>
@@ -260,7 +269,8 @@ const shipForm = ref({
   orderId: null,
   orderNo: '',
   logistics: '',
-  trackingNo: ''
+  trackingNo: '',
+  viewMode: false // 是否为查看模式
 })
 
 // 详情对话框
@@ -329,6 +339,8 @@ const fetchOrders = async () => {
       status: order.status,
       createTime: order.create_time,
       address: order.address,
+      logistics: order.logistics_company,
+      trackingNo: order.tracking_no,
       refundType: order.refund_type,
       refundReason: order.refund_reason,
       refundDescription: order.refund_description,
@@ -393,6 +405,8 @@ const handleViewDetail = async (row) => {
       orderNo: res.data.order.order_no,
       createTime: res.data.order.create_time,
       totalAmount: res.data.order.total_amount,
+      logistics: res.data.order.logistics_company,
+      trackingNo: res.data.order.tracking_no,
       refundType: res.data.order.refund_type,
       refundReason: res.data.order.refund_reason,
       refundDescription: res.data.order.refund_description,
@@ -412,7 +426,8 @@ const handleShip = (row) => {
     orderId: row.id,
     orderNo: row.orderNo,
     logistics: '',
-    trackingNo: ''
+    trackingNo: '',
+    viewMode: false
   }
   shipDialogVisible.value = true
 }
@@ -439,7 +454,14 @@ const confirmShip = async () => {
 }
 
 const handleViewLogistics = (row) => {
-  ElMessage.info(`查看订单 ${row.orderNo} 的物流信息`)
+  shipForm.value = {
+    orderId: row.id,
+    orderNo: row.orderNo,
+    logistics: row.logistics || '暂无物流信息',
+    trackingNo: row.trackingNo || '暂无物流单号',
+    viewMode: true
+  }
+  shipDialogVisible.value = true
 }
 
 const handleShipFromDetail = () => {
