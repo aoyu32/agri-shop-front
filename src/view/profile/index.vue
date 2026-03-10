@@ -63,6 +63,7 @@ import ProfileSidebar from './components/ProfileSidebar.vue'
 import CartList from './components/CartList.vue'
 import OrderList from './components/OrderList.vue'
 import ReviewList from './components/ReviewList.vue'
+import RefundList from './components/RefundList.vue'
 import FavoriteList from './components/FavoriteList.vue'
 import FootprintList from './components/FootprintList.vue'
 import AddressList from './components/AddressList.vue'
@@ -102,6 +103,7 @@ const componentMap = {
   'order-refund': OrderList,
   'review-pending': ReviewList,
   'review-done': ReviewList,
+  refund: RefundList,
   favorite: FavoriteList,
   footprint: FootprintList,
   address: AddressList,
