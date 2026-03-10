@@ -149,6 +149,16 @@
                         color: var(--theme-primary-color);
                         background-color: rgba(82, 196, 26, 0.05);
                     }
+
+                    &.liked {
+                        color: var(--theme-primary-color);
+                        background-color: rgba(82, 196, 26, 0.1);
+                        font-weight: 500;
+
+                        i {
+                            color: var(--theme-primary-color);
+                        }
+                    }
                 }
             }
         }

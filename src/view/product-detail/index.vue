@@ -68,6 +68,7 @@ import ProductInfo from './components/ProductInfo.vue'
 import ProductDetail from './components/ProductDetail.vue'
 import ProductComments from './components/ProductComments.vue'
 import { getProductDetail, getRecommendProducts } from '@/apis/product'
+import { getProductReviews } from '@/apis/review'
 
 const route = useRoute()
 const router = useRouter()
@@ -101,8 +102,38 @@ const product = ref({
   }
 })
 
-// 评论数据（暂时使用空数组，评价接口后续实现）
+// 评论数据
 const comments = ref([])
+
+// 加载商品评价
+const loadProductReviews = async (productId) => {
+  try {
+    const res = await getProductReviews({
+      product_id: productId,
+      page: 1,
+      page_size: 100 // 获取所有评价，前端分页
+    })
+    
+    if (res.code === 200) {
+      // 映射评价数据到组件需要的格式
+      comments.value = res.data.list.map(review => ({
+        id: review.id,
+        userName: review.user_name,
+        avatar: review.user_avatar || 'https://via.placeholder.com/40',
+        rating: review.rating,
+        content: review.content,
+        images: review.images || [],
+        spec: '', // 后端暂未返回规格信息
+        createTime: review.created_at,
+        likes: review.likes_count || 0,
+        isLiked: review.is_liked || false
+      }))
+    }
+  } catch (error) {
+    console.error('加载商品评价失败:', error)
+    // 静默失败，不影响用户体验
+  }
+}
 
 // 推荐商品
 const recommendProducts = ref([])
@@ -137,8 +168,8 @@ const loadProductData = async () => {
         sales: data.sales || 0,
         stock: data.stock || 0,
         tags: data.tags?.map(tag => tag.tag_name) || [],
-        rating: 4.8, // 暂时固定，后续从评价计算
-        commentCount: 0, // 暂时固定，后续从评价统计
+        rating: data.rating || 0,
+        commentCount: data.review_count || 0,
         origin: data.origin || '',
         images: data.images?.map(img => img.image_url) || [data.main_image],
         specs: data.specs && data.specs.length > 0 ? [{
@@ -164,6 +195,9 @@ const loadProductData = async () => {
 
       // 加载推荐商品
       loadRecommendProducts(data.category_id, data.id)
+
+      // 加载商品评价
+      loadProductReviews(data.id)
 
       // 记录浏览足迹（仅登录用户）
       if (userStore.isLoggedIn) {

@@ -55,3 +55,25 @@ export function deleteReview(data) {
         data
     })
 }
+
+/**
+ * 点赞评价
+ */
+export function likeReview(data) {
+    return request({
+        url: '/api/review/like',
+        method: 'post',
+        data
+    })
+}
+
+/**
+ * 取消点赞评价
+ */
+export function unlikeReview(data) {
+    return request({
+        url: '/api/review/unlike',
+        method: 'post',
+        data
+    })
+}

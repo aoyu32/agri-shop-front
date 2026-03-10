@@ -39,7 +39,7 @@
         </div>
 
         <div class="comment-footer">
-          <div class="comment-action" @click="likeComment(comment)">
+          <div class="comment-action" :class="{ liked: comment.isLiked }" @click="likeComment(comment)">
             <span><i class="iconfont icon-like"></i></span>
             <span>{{ comment.likes }}</span>
           </div>
@@ -58,6 +58,12 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
+import { useUserStore } from '@/store/modules/user'
+import { useRouter } from 'vue-router'
+import { likeReview, unlikeReview } from '@/apis/review'
+
+const userStore = useUserStore()
+const router = useRouter()
 
 const props = defineProps({
   comments: {
@@ -118,9 +124,32 @@ const filteredComments = computed(() => {
 })
 
 // 点赞评论
-const likeComment = (comment) => {
-  comment.likes++
-  ElMessage.success('点赞成功')
+const likeComment = async (comment) => {
+  // 检查登录状态
+  if (!userStore.isLoggedIn) {
+    ElMessage.warning('请先登录')
+    router.push('/auth/login')
+    return
+  }
+
+  try {
+    if (comment.isLiked) {
+      // 取消点赞
+      const res = await unlikeReview({ review_id: comment.id })
+      comment.isLiked = false
+      comment.likes = res.data.likes_count
+      ElMessage.success('已取消点赞')
+    } else {
+      // 点赞
+      const res = await likeReview({ review_id: comment.id })
+      comment.isLiked = true
+      comment.likes = res.data.likes_count
+      ElMessage.success('点赞成功')
+    }
+  } catch (error) {
+    // 错误消息已经在 request 拦截器中显示了，这里只需要记录日志
+    console.error('点赞操作失败:', error)
+  }
 }
 
 // 预览图片
