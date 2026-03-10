@@ -171,6 +171,7 @@ import { uploadFile } from '@/apis/oss'
 import MerchantSidebar from './components/MerchantSidebar.vue'
 import Dashboard from './components/Dashboard.vue'
 import MerchantOrderList from './components/MerchantOrderList.vue'
+import MerchantRefundList from './components/MerchantRefundList.vue'
 import ProductManagement from './components/ProductManagement.vue'
 import CategoryManagement from './components/CategoryManagement.vue'
 import ReviewManagement from './components/ReviewManagement.vue'
@@ -239,7 +240,7 @@ const componentMap = {
   'order-pending': MerchantOrderList,
   'order-shipped': MerchantOrderList,
   'order-completed': MerchantOrderList,
-  'order-refund': MerchantOrderList,
+  'order-refund': MerchantRefundList,
   'order-all': MerchantOrderList,
   'product-list': ProductManagement,
   'product-add': ProductManagement,
