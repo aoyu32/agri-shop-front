@@ -7,7 +7,7 @@
       <div class="shop-name">{{ shop.name }}</div>
       <div class="shop-stats">
         <span>⭐ {{ shop.rating }}分</span>
-        <span>{{ shop.followers }}关注</span>
+        <span>{{ shop.sales }}销量</span>
         <span>{{ shop.productCount }}商品</span>
       </div>
     </div>

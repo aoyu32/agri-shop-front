@@ -97,7 +97,7 @@ const product = ref({
     avatar: '',
     rating: 0,
     description: '',
-    followers: 0,
+    sales: 0,
     productCount: 0
   }
 })
@@ -188,7 +188,7 @@ const loadProductData = async () => {
           avatar: data.shop?.shop_logo || 'https://via.placeholder.com/80',
           rating: data.shop?.rating || 5.0,
           description: data.shop?.description || '',
-          followers: data.shop?.followers_count || 0,
+          sales: data.shop?.sales_count || 0,
           productCount: data.shop?.product_count || 0
         }
       }
