@@ -47,7 +47,7 @@
           </template>
         </el-table-column>
         <el-table-column prop="name" label="农产品名称" min-width="200" />
-        <el-table-column prop="category" label="分类" width="120" />
+        <el-table-column prop="category" label="分类" min-width="150" />
         <el-table-column prop="price" label="价格" width="100">
           <template #default="{ row }">
             <span class="price">¥{{ row.price }}</span>
@@ -87,7 +87,7 @@
           v-model:current-page="currentPage"
           v-model:page-size="pageSize"
           :page-sizes="[10, 20, 50, 100]"
-          :total="filteredProducts.length"
+          :total="total"
           layout="total, sizes, prev, pager, next, jumper"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
@@ -140,14 +140,15 @@
             </el-form-item>
 
             <el-form-item label="农产品分类" prop="category">
-              <el-select v-model="productForm.category" placeholder="请选择分类" style="width: 100%">
-                <el-option 
-                  v-for="cat in categoryStore.sortedCategories" 
-                  :key="cat.id" 
-                  :label="cat.name" 
-                  :value="cat.name" 
-                />
-              </el-select>
+              <el-cascader
+                v-model="productForm.category"
+                :options="categoryTree"
+                :props="cascaderProps"
+                placeholder="请选择分类"
+                style="width: 100%"
+                clearable
+              />
+              <div class="form-tip">请选择二级分类</div>
             </el-form-item>
 
             <el-row :gutter="20">
@@ -247,76 +248,49 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Delete } from '@element-plus/icons-vue'
 import { Editor } from '@bytemd/vue-next'
 import gfm from '@bytemd/plugin-gfm'
 import highlight from '@bytemd/plugin-highlight'
-import { useCategoryStore } from '@/store/modules/category'
+import {
+  getMerchantProductList,
+  getMerchantProductDetail,
+  addMerchantProduct,
+  updateMerchantProduct,
+  toggleProductStatus,
+  deleteMerchantProduct
+} from '@/apis/merchantProduct'
+import { getSystemCategories } from '@/apis/merchantCategory'
+import { uploadFile } from '@/apis/oss'
 import 'bytemd/dist/index.css'
 import 'highlight.js/styles/vs.css'
 
 const route = useRoute()
-const categoryStore = useCategoryStore()
 
 // 富文本编辑器插件
 const editorPlugins = [gfm(), highlight()]
 
-// 模拟商品数据
-const mockProducts = ref([
-  {
-    id: 1,
-    name: '有机西红柿',
-    category: '蔬菜',
-    price: 15.80,
-    stock: 150,
-    sales: 89,
-    status: 'on_sale',
-    image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=100&h=100&fit=crop',
-    description: '新鲜有机西红柿，口感鲜美'
-  },
-  {
-    id: 2,
-    name: '新鲜黄瓜',
-    category: '蔬菜',
-    price: 8.50,
-    stock: 8,
-    sales: 156,
-    status: 'on_sale',
-    image: 'https://via.placeholder.com/100',
-    description: '脆嫩多汁的新鲜黄瓜'
-  },
-  {
-    id: 3,
-    name: '有机生菜',
-    category: '蔬菜',
-    price: 12.00,
-    stock: 200,
-    sales: 234,
-    status: 'on_sale',
-    image: 'https://via.placeholder.com/100',
-    description: '绿色健康的有机生菜'
-  },
-  {
-    id: 4,
-    name: '新鲜菠菜',
-    category: '蔬菜',
-    price: 9.90,
-    stock: 0,
-    sales: 67,
-    status: 'off_sale',
-    image: 'https://via.placeholder.com/100',
-    description: '营养丰富的新鲜菠菜'
-  }
-])
-
 const loading = ref(false)
+const products = ref([])
+const categories = ref([])
+const categoryTree = ref([])
 const searchKeyword = ref('')
 const statusFilter = ref('')
 const currentPage = ref(1)
 const pageSize = ref(10)
+const total = ref(0)
+
+// 级联选择器配置
+const cascaderProps = {
+  value: 'id',
+  label: 'name',
+  children: 'children',
+  checkStrictly: false, // 只能选择二级分类
+  emitPath: false
+}
 
 // 对话框
 const dialogVisible = ref(false)
@@ -358,46 +332,91 @@ const pageTitle = computed(() => {
   return '农产品列表'
 })
 
-// 筛选商品
-const filteredProducts = computed(() => {
-  let products = mockProducts.value
-
-  // 按状态筛选
-  if (statusFilter.value) {
-    products = products.filter(p => p.status === statusFilter.value)
+// 获取商品列表
+const fetchProducts = async () => {
+  loading.value = true
+  try {
+    const res = await getMerchantProductList({
+      keyword: searchKeyword.value,
+      status: statusFilter.value,
+      page: currentPage.value,
+      page_size: pageSize.value
+    })
+    products.value = res.data.list || []
+    total.value = res.data.total || 0
+  } catch (error) {
+    console.error('获取商品列表失败:', error)
+  } finally {
+    loading.value = false
   }
+}
 
-  // 按关键词搜索
-  if (searchKeyword.value) {
-    const keyword = searchKeyword.value.toLowerCase()
-    products = products.filter(p =>
-      p.name.toLowerCase().includes(keyword) ||
-      p.category.toLowerCase().includes(keyword)
-    )
+// 获取分类列表
+const fetchCategories = async () => {
+  try {
+    const res = await getSystemCategories()
+    const list = res.data.list || []
+    categories.value = list
+    // 构建树形结构
+    categoryTree.value = buildTree(list, 0)
+  } catch (error) {
+    console.error('获取分类列表失败:', error)
   }
+}
 
-  return products
-})
+// 构建树形结构
+const buildTree = (list, parentId) => {
+  const tree = []
+  for (const item of list) {
+    if (item.parent_id === parentId) {
+      const children = buildTree(list, item.id)
+      const node = {
+        id: item.id,
+        name: item.icon ? `${item.icon} ${item.name}` : item.name,
+        children: children.length > 0 ? children : undefined
+      }
+      tree.push(node)
+    }
+  }
+  return tree
+}
 
 // 分页显示的商品
 const displayProducts = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value
-  const end = start + pageSize.value
-  return filteredProducts.value.slice(start, end)
+  return products.value.map(p => {
+    // 查找分类名称
+    const category = categories.value.find(c => c.id === p.category_id)
+    let categoryName = '未分类'
+    if (category) {
+      // 如果是二级分类，显示"一级分类 > 二级分类"
+      if (category.parent_id > 0) {
+        const parentCategory = categories.value.find(c => c.id === category.parent_id)
+        categoryName = parentCategory ? `${parentCategory.name} > ${category.name}` : category.name
+      } else {
+        categoryName = category.name
+      }
+    }
+    return {
+      ...p,
+      category: categoryName
+    }
+  })
 })
 
 // 监听路由变化（已移除添加商品菜单项）
 
 const handleSearch = () => {
   currentPage.value = 1
+  fetchProducts()
 }
 
 const handleSizeChange = () => {
   currentPage.value = 1
+  fetchProducts()
 }
 
 const handleCurrentChange = () => {
-  // 页码变化
+  fetchProducts()
 }
 
 const handleAdd = () => {
@@ -405,29 +424,50 @@ const handleAdd = () => {
   dialogVisible.value = true
 }
 
-const handleEdit = (row) => {
-  productForm.value = {
-    ...row,
-    images: row.images || [row.image],
-    subtitle: row.subtitle || '',
-    originalPrice: row.originalPrice || row.price,
-    unit: row.unit || '500g/份',
-    origin: row.origin || '山东',
-    tags: row.tags || ['新鲜', '包邮'],
-    specs: row.specs || [],
-    detail: row.detail || '# 商品详情\n\n请输入商品详情...'
+const handleEdit = async (row) => {
+  try {
+    const res = await getMerchantProductDetail({ id: row.id })
+    const detail = res.data
+    
+    productForm.value = {
+      id: detail.id,
+      name: detail.name,
+      subtitle: detail.subtitle || '',
+      category: detail.category_id,
+      price: detail.price,
+      originalPrice: detail.original_price || detail.price,
+      unit: detail.unit || '500g/份',
+      stock: detail.stock,
+      origin: detail.origin || '',
+      images: detail.images || [],
+      tags: detail.tags || [],
+      specs: detail.specs || [],
+      detail: detail.detail || '# 农产品详情\n\n请输入农产品详情...',
+      status: detail.status,
+      sales: row.sales || 0
+    }
+    activeTab.value = 'basic'
+    dialogVisible.value = true
+  } catch (error) {
+    console.error('获取商品详情失败:', error)
   }
-  activeTab.value = 'basic'
-  dialogVisible.value = true
 }
 
 // 图片管理
-const handleImageAdd = (file) => {
+const handleImageAdd = async (file) => {
   if (productForm.value.images.length >= 5) {
     ElMessage.warning('最多只能上传5张图片')
     return
   }
-  productForm.value.images.push(URL.createObjectURL(file.raw))
+  
+  try {
+    const res = await uploadFile(file.raw, 'product')
+    productForm.value.images.push(res.data.url)
+    ElMessage.success('图片上传成功')
+  } catch (error) {
+    console.error('图片上传失败:', error)
+    ElMessage.error('图片上传失败')
+  }
 }
 
 const removeImage = (index) => {
@@ -485,9 +525,14 @@ const handleToggleStatus = (row) => {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
-  }).then(() => {
-    row.status = newStatus
-    ElMessage.success(`${action}成功`)
+  }).then(async () => {
+    try {
+      await toggleProductStatus({ id: row.id })
+      ElMessage.success(`${action}成功`)
+      fetchProducts()
+    } catch (error) {
+      console.error('操作失败:', error)
+    }
   }).catch(() => {})
 }
 
@@ -496,41 +541,51 @@ const handleDelete = (row) => {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
-  }).then(() => {
-    const index = mockProducts.value.findIndex(p => p.id === row.id)
-    if (index > -1) {
-      mockProducts.value.splice(index, 1)
+  }).then(async () => {
+    try {
+      await deleteMerchantProduct({ id: row.id })
       ElMessage.success('删除成功')
+      fetchProducts()
+    } catch (error) {
+      console.error('删除失败:', error)
     }
   }).catch(() => {})
 }
 
 const handleSubmit = () => {
-  formRef.value.validate((valid) => {
+  formRef.value.validate(async (valid) => {
     if (valid) {
       const submitData = {
-        ...productForm.value,
-        image: productForm.value.images[0] || ''
+        id: productForm.value.id,
+        name: productForm.value.name,
+        subtitle: productForm.value.subtitle,
+        category_id: productForm.value.category,
+        price: productForm.value.price,
+        original_price: productForm.value.originalPrice,
+        unit: productForm.value.unit,
+        stock: productForm.value.stock,
+        origin: productForm.value.origin,
+        images: productForm.value.images,
+        tags: productForm.value.tags,
+        specs: productForm.value.specs,
+        detail: productForm.value.detail
       }
       
-      if (submitData.id) {
-        // 编辑
-        const index = mockProducts.value.findIndex(p => p.id === submitData.id)
-        if (index > -1) {
-          mockProducts.value[index] = submitData
+      try {
+        if (submitData.id) {
+          // 编辑
+          await updateMerchantProduct(submitData)
           ElMessage.success('编辑成功')
+        } else {
+          // 添加
+          await addMerchantProduct(submitData)
+          ElMessage.success('添加成功')
         }
-      } else {
-        // 添加
-        const newProduct = {
-          ...submitData,
-          id: Date.now(),
-          sales: 0
-        }
-        mockProducts.value.unshift(newProduct)
-        ElMessage.success('添加成功')
+        dialogVisible.value = false
+        fetchProducts()
+      } catch (error) {
+        console.error('操作失败:', error)
       }
-      dialogVisible.value = false
     }
   })
 }
@@ -558,6 +613,11 @@ const resetForm = () => {
   tagInputValue.value = ''
   formRef.value?.clearValidate()
 }
+
+onMounted(() => {
+  fetchCategories()
+  fetchProducts()
+})
 </script>
 
 <style lang="scss" scoped>
