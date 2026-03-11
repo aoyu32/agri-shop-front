@@ -152,28 +152,63 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
 import { getLunarDate } from '@/utils/lunar'
+import { getHomeStatistics } from '@/apis/user'
 
 const router = useRouter()
 const userStore = useUserStore()
 
 // 消费者订单数量
 const orderCounts = ref({
-  pending: 2,
-  paid: 1,
-  shipped: 3,
-  received: 5
+  pending: 0,
+  paid: 0,
+  shipped: 0,
+  received: 0
 })
 
 // 商户统计数据
 const merchantStats = ref({
-  pending: 8,
-  shipped: 12,
-  products: 48
+  pending: 0,
+  shipped: 0,
+  products: 0
+})
+
+// 获取统计数据
+const fetchStatistics = async () => {
+  if (!userStore.userInfo.isLogin) {
+    return
+  }
+
+  try {
+    const res = await getHomeStatistics()
+    if (res.data.type === 'consumer') {
+      // 消费者数据
+      orderCounts.value = {
+        pending: res.data.pending || 0,
+        paid: res.data.paid || 0,
+        shipped: res.data.shipped || 0,
+        received: res.data.received || 0
+      }
+    } else if (res.data.type === 'merchant') {
+      // 农户数据
+      merchantStats.value = {
+        pending: res.data.pending || 0,
+        shipped: res.data.shipped || 0,
+        products: res.data.products || 0
+      }
+    }
+  } catch (error) {
+    console.error('获取统计数据失败:', error)
+  }
+}
+
+// 组件挂载时获取数据
+onMounted(() => {
+  fetchStatistics()
 })
 
 // 获取当前日期信息

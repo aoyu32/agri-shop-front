@@ -85,3 +85,13 @@ export const getUserStatistics = () => {
         method: 'get'
     })
 }
+
+/**
+ * 获取首页统计数据（消费者和农户）
+ */
+export const getHomeStatistics = () => {
+    return request({
+        url: '/api/user/home-statistics',
+        method: 'get'
+    })
+}
