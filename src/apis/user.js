@@ -3,7 +3,7 @@ import request from '@/utils/request'
 /**
  * 获取用户信息
  */
-export const getUserInfo = () => {
+export function getUserInfo() {
     return request({
         url: '/api/user/info',
         method: 'get'
@@ -13,7 +13,7 @@ export const getUserInfo = () => {
 /**
  * 更新用户信息
  */
-export const updateUserInfo = (data) => {
+export function updateUserInfo(data) {
     return request({
         url: '/api/user/update',
         method: 'post',
@@ -22,20 +22,9 @@ export const updateUserInfo = (data) => {
 }
 
 /**
- * 更新头像
- */
-export const updateAvatar = (data) => {
-    return request({
-        url: '/api/user/update-avatar',
-        method: 'post',
-        data
-    })
-}
-
-/**
  * 修改密码
  */
-export const changePassword = (data) => {
+export function changePassword(data) {
     return request({
         url: '/api/user/change-password',
         method: 'post',
@@ -46,7 +35,7 @@ export const changePassword = (data) => {
 /**
  * 更换手机号
  */
-export const changePhone = (data) => {
+export function changePhone(data) {
     return request({
         url: '/api/user/change-phone',
         method: 'post',
@@ -55,9 +44,9 @@ export const changePhone = (data) => {
 }
 
 /**
- * 发送验证码（用于更换手机号）
+ * 发送验证码
  */
-export const sendVerifyCode = (data) => {
+export function sendCode(data) {
     return request({
         url: '/api/user/send-code',
         method: 'post',
@@ -66,20 +55,9 @@ export const sendVerifyCode = (data) => {
 }
 
 /**
- * 注销账号
- */
-export const deleteAccount = (data) => {
-    return request({
-        url: '/api/user/delete-account',
-        method: 'post',
-        data
-    })
-}
-
-/**
  * 获取用户统计信息
  */
-export const getUserStatistics = () => {
+export function getUserStatistics() {
     return request({
         url: '/api/user/statistics',
         method: 'get'
@@ -87,11 +65,22 @@ export const getUserStatistics = () => {
 }
 
 /**
- * 获取首页统计数据（消费者和农户）
+ * 获取首页统计数据
  */
-export const getHomeStatistics = () => {
+export function getHomeStatistics() {
     return request({
         url: '/api/user/home-statistics',
         method: 'get'
+    })
+}
+
+/**
+ * 注销账号
+ */
+export function deleteAccount(data) {
+    return request({
+        url: '/api/user/delete-account',
+        method: 'post',
+        data
     })
 }

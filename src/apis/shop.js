@@ -53,3 +53,14 @@ export function getMyShop() {
         method: 'get'
     })
 }
+
+/**
+ * 更新店铺设置
+ */
+export function updateShopSettings(data) {
+    return request({
+        url: '/api/shop/update-settings',
+        method: 'post',
+        data
+    })
+}

@@ -72,19 +72,27 @@
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item v-if="userStore.isConsumer" command="profile">
-                  <i class="iconfont icon-yonghu"></i>
+                  <el-icon><User /></el-icon>
                   个人中心
                 </el-dropdown-item>
                 <el-dropdown-item v-if="userStore.isMerchant && shopInfo.has_shop && shopInfo.shop.audit_status === 1" command="shop">
-                  <i class="iconfont icon-shangdian-2"></i>
+                  <el-icon><Shop /></el-icon>
                   我的店铺
                 </el-dropdown-item>
                 <el-dropdown-item v-if="userStore.isMerchant && (!shopInfo.has_shop || shopInfo.shop.audit_status !== 1)" command="shop">
-                  <i class="iconfont icon-shangdian-2"></i>
+                  <el-icon><Shop /></el-icon>
                   {{ !shopInfo.has_shop ? '开通店铺' : (shopInfo.shop.audit_status === 0 ? '店铺审核中' : '重新申请店铺') }}
                 </el-dropdown-item>
+                <el-dropdown-item v-if="userStore.isMerchant" command="personal-info">
+                  <el-icon><User /></el-icon>
+                  个人信息
+                </el-dropdown-item>
+                <el-dropdown-item v-if="userStore.isMerchant" command="account-security">
+                  <el-icon><Lock /></el-icon>
+                  账号安全
+                </el-dropdown-item>
                 <el-dropdown-item divided command="logout">
-                  <i class="iconfont icon-tuichu"></i>
+                  <el-icon><SwitchButton /></el-icon>
                   退出登录
                 </el-dropdown-item>
               </el-dropdown-menu>
@@ -117,17 +125,25 @@
 
     <!-- 消息抽屉 -->
     <MessageDrawer v-model="showMessageDrawer" />
+
+    <!-- 个人信息弹窗 -->
+    <PersonalInfoDialog v-model="showPersonalInfoDialog" @success="handlePersonalInfoUpdate" />
+
+    <!-- 账号安全弹窗 -->
+    <AccountSecurityDialog v-model="showAccountSecurityDialog" />
   </header>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, watch, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Search } from '@element-plus/icons-vue'
+import { Search, User, Lock, Shop, SwitchButton } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
 import { getMyShop } from '@/apis/shop'
 import MessageDrawer from '@/components/message-drawer/index.vue'
+import PersonalInfoDialog from './PersonalInfoDialog.vue'
+import AccountSecurityDialog from './AccountSecurityDialog.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -145,6 +161,10 @@ const showMobileSearch = ref(false)
 
 // 消息抽屉状态
 const showMessageDrawer = ref(false)
+
+// 个人信息和账号安全弹窗状态
+const showPersonalInfoDialog = ref(false)
+const showAccountSecurityDialog = ref(false)
 
 // 店铺信息
 const shopInfo = ref({
@@ -297,12 +317,27 @@ const handleCommand = (command) => {
       // 农户跳转到商家管理后台
       router.push('/merchant/profile')
       break
+    case 'personal-info':
+      // 打开个人信息弹窗
+      showPersonalInfoDialog.value = true
+      break
+    case 'account-security':
+      // 打开账号安全弹窗
+      showAccountSecurityDialog.value = true
+      break
     case 'logout':
       userStore.logout()
       ElMessage.success('已退出登录')
       router.push('/home')
       break
   }
+}
+
+// 个人信息更新成功回调
+const handlePersonalInfoUpdate = (updatedInfo) => {
+  // 更新用户信息
+  userStore.updateUserInfo(updatedInfo)
+  ElMessage.success('个人信息更新成功')
 }
 </script>
 

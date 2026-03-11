@@ -20,7 +20,7 @@
             </span>
             <span v-if="merchantInfo" class="meta-item">
               <i class="iconfont icon-yonghu"></i>
-              农户：{{ merchantInfo.username }}
+              农户：{{ merchantInfo.nickname }}
             </span>
             <span v-if="merchantInfo" class="meta-item">
               <i class="iconfont icon-dianhua"></i>

@@ -182,6 +182,12 @@ export const useUserStore = defineStore('user', () => {
     cartCount.value = count
   }
 
+  // 更新用户信息（用于个人信息修改后更新）
+  const updateUserInfo = (info) => {
+    userInfo.value = { ...userInfo.value, ...info }
+    localStorage.setItem('userInfo', JSON.stringify(userInfo.value))
+  }
+
   return {
     userInfo,
     userStatistics,
@@ -200,6 +206,7 @@ export const useUserStore = defineStore('user', () => {
     initUserInfo,
     setUnreadMessages,
     setCartCount,
-    fetchCartCount
+    fetchCartCount,
+    updateUserInfo
   }
 })
