@@ -80,7 +80,7 @@
             </div>
             <div class="farmer-desc">{{ item.description }}</div>
             <div class="farmer-stats">
-              <span>关注 {{ item.followers }}</span>
+              <span>商品 {{ item.productCount }}</span>
               <span>销量 {{ item.sales }}</span>
             </div>
           </div>
@@ -205,7 +205,7 @@ const loadPromotionProducts = async () => {
 // 加载推荐店铺
 const loadRecommendedShops = async () => {
   try {
-    const res = await getRecommendedShops(6)
+    const res = await getRecommendedShops({ limit: 6 })
     if (res.code === 200) {
       farmerProducts.value = res.data.list.map(item => ({
         shopId: item.id,
@@ -213,7 +213,7 @@ const loadRecommendedShops = async () => {
         avatar: item.shop_logo || 'https://via.placeholder.com/80',
         rating: item.rating,
         description: item.description || '暂无简介',
-        followers: item.followers_count,
+        productCount: item.product_count,
         sales: item.sales_count
       }))
     }

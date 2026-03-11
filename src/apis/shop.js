@@ -2,35 +2,39 @@ import request from '@/utils/request'
 
 /**
  * 获取推荐店铺列表
- * @param {number} limit - 数量限制
  */
-export function getRecommendedShops(limit = 10) {
+export function getRecommendedShops(params) {
     return request({
         url: '/api/shop/recommended',
         method: 'get',
-        params: { limit }
+        params
     })
 }
 
 /**
  * 获取店铺详情
- * @param {number} id - 店铺ID
  */
-export function getShopDetail(id) {
+export function getShopDetail(params) {
     return request({
         url: '/api/shop/detail',
         method: 'get',
-        params: { id }
+        params
     })
 }
+
+/**
+ * 获取店铺页面（包含分类和商品）
+ */
+export function getShopPage(params) {
+    return request({
+        url: '/api/shop/page',
+        method: 'get',
+        params
+    })
+}
+
 /**
  * 申请开通店铺
- * @param {Object} data
- * @param {string} data.shop_name - 店铺名称
- * @param {string} data.shop_logo - 店铺Logo
- * @param {string} data.shop_banner - 店铺横幅
- * @param {string} data.description - 店铺简介
- * @param {string} data.location - 店铺地址
  */
 export function applyShop(data) {
     return request({

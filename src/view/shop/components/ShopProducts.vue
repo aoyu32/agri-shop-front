@@ -3,47 +3,53 @@
     <!-- 分类导航栏 -->
     <div class="category-nav">
       <div
+        class="category-item"
+        :class="{ active: activeCategory === '' }"
+        @click="handleCategoryChange('')"
+      >
+        全部
+        <span class="category-count">({{ total }})</span>
+      </div>
+      <div
         v-for="category in categories"
         :key="category.id"
         class="category-item"
         :class="{ active: activeCategory === category.id }"
         @click="handleCategoryChange(category.id)"
       >
-        {{ category.name }}
-        <span class="category-count">({{ category.count }})</span>
+        {{ category.icon }} {{ category.name }}
+        <span class="category-count">({{ category.product_count }})</span>
       </div>
     </div>
 
     <!-- 农产品列表 -->
     <div class="products-section">
       <div class="products-header">
-        <div class="products-count">共 {{ filteredProducts.length }} 件农产品</div>
-        <div class="products-sort">
-          <el-select v-model="sortType" placeholder="排序方式" style="width: 150px">
-            <el-option label="综合排序" value="default" />
-            <el-option label="销量优先" value="sales" />
-            <el-option label="价格从低到高" value="price_asc" />
-            <el-option label="价格从高到低" value="price_desc" />
-          </el-select>
-        </div>
+        <div class="products-count">共 {{ total }} 件农产品</div>
       </div>
 
       <div class="products-grid">
         <ProductCard
-          v-for="product in sortedProducts"
+          v-for="product in products"
           :key="product.id"
           :product="product"
+          @click="handleProductClick"
         />
       </div>
 
+      <!-- 空状态 -->
+      <div v-if="products.length === 0" class="empty-state">
+        <el-empty description="暂无农产品" />
+      </div>
+
       <!-- 分页 -->
-      <div v-if="filteredProducts.length > 0" class="pagination">
+      <div v-if="total > pageSize" class="pagination">
         <el-pagination
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
-          :page-sizes="[12, 24, 36, 48]"
-          :total="filteredProducts.length"
-          layout="total, sizes, prev, pager, next, jumper"
+          :current-page="currentPage"
+          :page-size="pageSize"
+          :total="total"
+          layout="total, prev, pager, next, jumper"
+          @current-change="handlePageChange"
         />
       </div>
     </div>
@@ -51,8 +57,11 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import ProductCard from '@/components/product-card/index.vue'
+
+const router = useRouter()
 
 const props = defineProps({
   categories: {
@@ -62,50 +71,37 @@ const props = defineProps({
   products: {
     type: Array,
     required: true
+  },
+  total: {
+    type: Number,
+    default: 0
+  },
+  currentPage: {
+    type: Number,
+    default: 1
+  },
+  pageSize: {
+    type: Number,
+    default: 20
   }
 })
 
-const activeCategory = ref('all')
-const sortType = ref('default')
-const currentPage = ref(1)
-const pageSize = ref(12)
+const emit = defineEmits(['category-change', 'page-change'])
 
-// 计算属性
-const filteredProducts = computed(() => {
-  if (activeCategory.value === 'all') {
-    return props.products
-  }
-  return props.products.filter(p => p.category === activeCategory.value)
-})
-
-const sortedProducts = computed(() => {
-  let result = [...filteredProducts.value]
-  
-  switch (sortType.value) {
-    case 'sales':
-      result.sort((a, b) => b.sales - a.sales)
-      break
-    case 'price_asc':
-      result.sort((a, b) => a.price - b.price)
-      break
-    case 'price_desc':
-      result.sort((a, b) => b.price - a.price)
-      break
-    default:
-      // 综合排序
-      break
-  }
-  
-  // 分页
-  const start = (currentPage.value - 1) * pageSize.value
-  const end = start + pageSize.value
-  return result.slice(start, end)
-})
+const activeCategory = ref('')
 
 // 方法
 const handleCategoryChange = (categoryId) => {
   activeCategory.value = categoryId
-  currentPage.value = 1 // 切换分类时重置页码
+  emit('category-change', categoryId)
+}
+
+const handlePageChange = (page) => {
+  emit('page-change', page)
+}
+
+const handleProductClick = (product) => {
+  router.push(`/product/${product.id}`)
 }
 </script>
 
