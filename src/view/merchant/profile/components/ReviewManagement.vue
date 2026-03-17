@@ -113,7 +113,7 @@
           v-model:current-page="currentPage"
           v-model:page-size="pageSize"
           :page-sizes="[10, 20, 50]"
-          :total="filteredReviews.length"
+          :total="total"
           layout="total, sizes, prev, pager, next, jumper"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
@@ -164,71 +164,18 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { ElMessage } from 'element-plus'
-
-// 模拟评价数据
-const mockReviews = ref([
-  {
-    id: 1,
-    user: {
-      name: '张三',
-      avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
-    },
-    product: {
-      name: '有机西红柿',
-      spec: '500g/份',
-      image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=100&h=100&fit=crop'
-    },
-    rating: 4.5,
-    content: '非常新鲜，口感很好，下次还会再买！',
-    images: ['https://via.placeholder.com/200', 'https://via.placeholder.com/200'],
-    createTime: '2024-02-08 10:30',
-    status: 'pending',
-    reply: ''
-  },
-  {
-    id: 2,
-    user: {
-      name: '李四',
-      avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
-    },
-    product: {
-      name: '新鲜黄瓜',
-      spec: '500g/份',
-      image: 'https://via.placeholder.com/100'
-    },
-    rating: 3.5,
-    content: '黄瓜很脆，就是有点小',
-    images: [],
-    createTime: '2024-02-07 15:20',
-    status: 'replied',
-    reply: '感谢您的评价，我们会继续努力提供更好的产品！'
-  },
-  {
-    id: 3,
-    user: {
-      name: '王五',
-      avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
-    },
-    product: {
-      name: '有机生菜',
-      spec: '300g/份',
-      image: 'https://via.placeholder.com/100'
-    },
-    rating: 5,
-    content: '生菜很新鲜，包装也很好，物流很快',
-    images: ['https://via.placeholder.com/200'],
-    createTime: '2024-02-06 09:15',
-    status: 'pending',
-    reply: ''
-  }
-])
+import { ref, computed, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { getMerchantReviews, merchantReplyReview, merchantDeleteReply } from '@/apis/review'
 
 const loading = ref(false)
 const statusFilter = ref('')
 const currentPage = ref(1)
 const pageSize = ref(10)
+const total = ref(0)
+
+// 评价列表
+const reviews = ref([])
 
 // 回复对话框
 const replyDialogVisible = ref(false)
@@ -237,31 +184,49 @@ const replyForm = ref({
   reply: ''
 })
 
-// 筛选评价
-const filteredReviews = computed(() => {
-  if (!statusFilter.value) {
-    return mockReviews.value
-  }
-  return mockReviews.value.filter(r => r.status === statusFilter.value)
-})
-
 // 分页显示的评价
 const displayReviews = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value
-  const end = start + pageSize.value
-  return filteredReviews.value.slice(start, end)
+  return reviews.value
 })
+
+// 加载评价列表
+const loadReviews = async () => {
+  try {
+    loading.value = true
+    const res = await getMerchantReviews({
+      status: statusFilter.value,
+      page: currentPage.value,
+      page_size: pageSize.value
+    })
+    
+    if (res.code === 200) {
+      reviews.value = res.data.list
+      total.value = res.data.total
+    } else {
+      ElMessage.error(res.message || '加载失败')
+    }
+  } catch (error) {
+    console.error('加载评价列表失败:', error)
+    ElMessage.error(error.message || '加载失败')
+  } finally {
+    loading.value = false
+  }
+}
 
 const handleFilterChange = () => {
   currentPage.value = 1
+  loadReviews()
 }
 
-const handleSizeChange = () => {
+const handleSizeChange = (val) => {
+  pageSize.value = val
   currentPage.value = 1
+  loadReviews()
 }
 
-const handleCurrentChange = () => {
-  // 页码变化
+const handleCurrentChange = (val) => {
+  currentPage.value = val
+  loadReviews()
 }
 
 const handleReply = (row) => {
@@ -276,31 +241,59 @@ const handleEditReply = (row) => {
   replyDialogVisible.value = true
 }
 
-const confirmReply = () => {
+const confirmReply = async () => {
   if (!replyForm.value.reply.trim()) {
     ElMessage.warning('请输入回复内容')
     return
   }
 
-  currentReview.value.reply = replyForm.value.reply
-  currentReview.value.status = 'replied'
-  ElMessage.success('回复成功')
-  replyDialogVisible.value = false
+  try {
+    const res = await merchantReplyReview({
+      review_id: currentReview.value.id,
+      reply_content: replyForm.value.reply
+    })
+    
+    if (res.code === 200) {
+      ElMessage.success('回复成功')
+      replyDialogVisible.value = false
+      loadReviews() // 重新加载列表
+    } else {
+      ElMessage.error(res.message || '回复失败')
+    }
+  } catch (error) {
+    console.error('回复失败:', error)
+    ElMessage.error(error.message || '回复失败')
+  }
 }
 
 const handleDelete = (row) => {
-  ElMessageBox.confirm('确定要删除该评价吗？删除后无法恢复。', '提示', {
+  ElMessageBox.confirm('确定要删除该回复吗？删除后用户将看不到您的回复。', '提示', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
-  }).then(() => {
-    const index = mockReviews.value.findIndex(r => r.id === row.id)
-    if (index > -1) {
-      mockReviews.value.splice(index, 1)
-      ElMessage.success('删除成功')
+  }).then(async () => {
+    try {
+      const res = await merchantDeleteReply({
+        review_id: row.id
+      })
+      
+      if (res.code === 200) {
+        ElMessage.success('删除成功')
+        loadReviews() // 重新加载列表
+      } else {
+        ElMessage.error(res.message || '删除失败')
+      }
+    } catch (error) {
+      console.error('删除失败:', error)
+      ElMessage.error(error.message || '删除失败')
     }
   }).catch(() => {})
 }
+
+// 页面加载时获取数据
+onMounted(() => {
+  loadReviews()
+})
 </script>
 
 <style lang="scss" scoped>

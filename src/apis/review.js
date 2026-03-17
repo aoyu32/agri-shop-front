@@ -77,3 +77,36 @@ export function unlikeReview(data) {
         data
     })
 }
+
+/**
+ * 商家获取评价列表
+ */
+export function getMerchantReviews(params) {
+    return request({
+        url: '/api/review/merchant-reviews',
+        method: 'get',
+        params
+    })
+}
+
+/**
+ * 商家回复评价
+ */
+export function merchantReplyReview(data) {
+    return request({
+        url: '/api/review/merchant-reply',
+        method: 'post',
+        data
+    })
+}
+
+/**
+ * 商家删除回复
+ */
+export function merchantDeleteReply(data) {
+    return request({
+        url: '/api/review/merchant-delete-reply',
+        method: 'post',
+        data
+    })
+}
