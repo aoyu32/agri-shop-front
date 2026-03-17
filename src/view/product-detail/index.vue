@@ -50,6 +50,11 @@
                 <div class="recommend-price">¥{{ item.price }}</div>
               </div>
             </div>
+            <!-- 空状态 -->
+            <div v-if="recommendProducts.length === 0" class="recommend-empty">
+              <i class="iconfont icon-empty"></i>
+              <p>暂无相关推荐</p>
+            </div>
           </div>
         </div>
       </div>
@@ -126,7 +131,9 @@ const loadProductReviews = async (productId) => {
         spec: '', // 后端暂未返回规格信息
         createTime: review.created_at,
         likes: review.likes_count || 0,
-        isLiked: review.is_liked || false
+        isLiked: review.is_liked || false,
+        reply: review.reply_content || '',
+        replyTime: review.reply_time || ''
       }))
     }
   } catch (error) {

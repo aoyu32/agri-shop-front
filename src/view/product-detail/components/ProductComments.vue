@@ -38,6 +38,16 @@
             class="comment-image" @click="previewImage(comment.images, index)" />
         </div>
 
+        <!-- 商家回复 -->
+        <div v-if="comment.reply" class="merchant-reply">
+          <div class="reply-header">
+            <i class="iconfont icon-shop"></i>
+            <span class="reply-label">商家回复：</span>
+            <span class="reply-time">{{ comment.replyTime }}</span>
+          </div>
+          <div class="reply-content">{{ comment.reply }}</div>
+        </div>
+
         <div class="comment-footer">
           <div class="comment-action" :class="{ liked: comment.isLiked }" @click="likeComment(comment)">
             <span><i class="iconfont icon-like"></i></span>

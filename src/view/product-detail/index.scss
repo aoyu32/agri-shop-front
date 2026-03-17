@@ -61,6 +61,8 @@
         }
 
         .recommend-list {
+          min-height: 400px;
+
           .recommend-item {
             display: flex;
             gap: 12px;
@@ -109,6 +111,26 @@
                 font-weight: 600;
                 color: #ff4d4f;
               }
+            }
+          }
+
+          .recommend-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            color: var(--text-placeholder-color);
+
+            i {
+              font-size: 64px;
+              margin-bottom: 16px;
+              opacity: 0.3;
+            }
+
+            p {
+              font-size: 14px;
+              margin: 0;
             }
           }
         }
