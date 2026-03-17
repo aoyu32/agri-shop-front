@@ -82,7 +82,7 @@
     gap: 8px;
     padding: 12px 16px;
     margin: 12px;
-    border: 2px solid var(--theme-primary-color); 
+    border: 2px solid var(--theme-primary-color);
     color: var(--text-black-color);
     border-radius: 6px;
     cursor: pointer;
@@ -124,7 +124,7 @@
         background-color: rgba(82, 196, 26, 0.05);
         border-color: rgba(82, 196, 26, 0.2);
 
-        .chat-actions {
+        .chat-delete {
           opacity: 1;
         }
       }
@@ -156,7 +156,7 @@
         .chat-preview {
           font-size: 12px;
           color: var(--text-secondary-color);
-          margin-bottom: 4px;
+          margin-bottom: 6px;
           overflow: hidden;
           text-overflow: ellipsis;
           display: -webkit-box;
@@ -165,9 +165,48 @@
           line-height: 1.4;
         }
 
+        .chat-footer {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+        }
+
         .chat-time {
           font-size: 11px;
           color: var(--text-placeholder-color);
+          flex: 1;
+        }
+
+        .chat-delete {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 24px;
+          height: 24px;
+          border-radius: 4px;
+          opacity: 0;
+          transition: all 0.3s;
+          cursor: pointer;
+
+          i {
+            font-size: 14px;
+            color: var(--text-secondary-color);
+          }
+
+          &:hover {
+            background-color: rgba(255, 77, 79, 0.1);
+
+            i {
+              color: #ff4d4f;
+            }
+          }
+        }
+      }
+
+      &:hover {
+        .chat-delete {
+          opacity: 1;
         }
       }
 

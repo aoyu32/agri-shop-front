@@ -22,6 +22,17 @@ export function updateUserInfo(data) {
 }
 
 /**
+ * 更新用户头像
+ */
+export function updateAvatar(data) {
+    return request({
+        url: '/api/user/update',
+        method: 'post',
+        data
+    })
+}
+
+/**
  * 修改密码
  */
 export function changePassword(data) {
@@ -52,6 +63,13 @@ export function sendCode(data) {
         method: 'post',
         data
     })
+}
+
+/**
+ * 发送验证码（别名）
+ */
+export function sendVerifyCode(data) {
+    return sendCode(data)
 }
 
 /**

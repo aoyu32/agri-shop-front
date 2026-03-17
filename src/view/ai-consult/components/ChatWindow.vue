@@ -13,23 +13,10 @@
     <div v-if="hasMessages" class="messages-container" ref="messagesContainerRef">
       <div class="messages-list">
         <ChatMessage
-          v-for="message in messages"
-          :key="message.id"
+          v-for="(message, index) in messages"
+          :key="index"
           :message="message"
         />
-        <!-- 加载中提示 -->
-        <div v-if="isLoading" class="loading-message">
-          <div class="loading-avatar">
-            <i class="iconfont icon-damoxingjichengpingtai"></i>
-          </div>
-          <div class="loading-content">
-            <div class="loading-dots">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -40,7 +27,7 @@
           <i class="iconfont icon-damoxingjichengpingtai"></i>
         </div>
         <h3>欢迎使用AI咨询</h3>
-        <p>我是您的农业智能助手，可以为您解答：</p>
+        <p>您好，我叫农小宝，可以为您解答：</p>
         <ul class="feature-list">
           <li>
             <i class="iconfont icon-shangdian-1"></i>
@@ -119,6 +106,11 @@ watch(() => props.isLoading, (newVal) => {
   if (newVal) {
     scrollToBottom()
   }
+})
+
+// 暴露方法给父组件
+defineExpose({
+  scrollToBottom
 })
 </script>
 

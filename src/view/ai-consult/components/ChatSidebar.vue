@@ -23,20 +23,12 @@
         <div class="chat-item-content">
           <div class="chat-title">{{ chat.title }}</div>
           <div class="chat-preview">{{ chat.preview }}</div>
-          <div class="chat-time">{{ chat.time }}</div>
-        </div>
-        <div class="chat-actions" @click.stop>
-          <el-dropdown trigger="click" @command="(cmd) => handleCommand(cmd, chat.id)">
-            <i class="iconfont icon-gengduo"></i>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item command="delete">
-                  <i class="iconfont icon-shanchuyonghu"></i>
-                  删除
-                </el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
+          <div class="chat-footer">
+            <div class="chat-time">{{ chat.time }}</div>
+            <div class="chat-delete" @click.stop="handleDeleteChat(chat.id)" title="删除对话">
+              <i class="iconfont icon-delete"></i>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -51,6 +43,8 @@
 </template>
 
 <script setup>
+import { ElMessageBox } from 'element-plus'
+
 const props = defineProps({
   chatList: {
     type: Array,
@@ -76,9 +70,20 @@ const handleSelectChat = (chatId) => {
   emit('select-chat', chatId)
 }
 
-const handleCommand = (command, chatId) => {
-  if (command === 'delete') {
+const handleDeleteChat = async (chatId) => {
+  try {
+    await ElMessageBox.confirm(
+      '确定要删除这个对话吗？删除后将无法恢复。',
+      '删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
     emit('delete-chat', chatId)
+  } catch {
+    // 用户取消删除
   }
 }
 </script>

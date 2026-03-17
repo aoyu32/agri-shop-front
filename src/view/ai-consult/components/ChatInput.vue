@@ -7,9 +7,18 @@
           v-for="(image, index) in imageList"
           :key="index"
           class="preview-item"
+          :class="{ uploading: image.uploading }"
         >
           <img :src="image.url" :alt="image.name" />
-          <div class="preview-actions" @click.stop="removeImage(index)">
+          <!-- 上传中遮罩 -->
+          <div v-if="image.uploading" class="uploading-mask">
+            <el-icon class="is-loading">
+              <Loading />
+            </el-icon>
+            <span>上传中...</span>
+          </div>
+          <!-- 删除按钮 -->
+          <div v-else class="preview-actions" @click.stop="removeImage(index)">
             <i class="iconfont icon-close"></i>
           </div>
         </div>
@@ -46,7 +55,7 @@
           </div>
           <el-button
             type="primary"
-            :disabled="(!inputValue.trim() && imageList.length === 0) || disabled"
+            :disabled="isButtonDisabled"
             :loading="disabled"
             @click="handleSend"
             class="send-btn"
@@ -60,8 +69,10 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
+import { Loading } from '@element-plus/icons-vue'
+import { uploadFile } from '@/apis/oss'
 
 const props = defineProps({
   disabled: {
@@ -76,11 +87,34 @@ const inputValue = ref('')
 const imageList = ref([])
 const fileInputRef = ref(null)
 
+// 是否有图片正在上传
+const isUploading = computed(() => {
+  return imageList.value.some(img => img.uploading)
+})
+
+// 计算发送按钮是否禁用
+const isButtonDisabled = computed(() => {
+  // 如果正在发送消息，禁用
+  if (props.disabled) return true
+  
+  // 如果有图片正在上传，禁用
+  if (isUploading.value) return true
+  
+  // 获取已上传成功的图片数量
+  const uploadedImages = imageList.value.filter(img => !img.uploading)
+  
+  // 如果没有输入文本且没有已上传的图片，禁用
+  if (!inputValue.value.trim() && uploadedImages.length === 0) return true
+  
+  return false
+})
+
 const triggerFileInput = () => {
+  if (props.disabled) return
   fileInputRef.value?.click()
 }
 
-const handleFileChange = (event) => {
+const handleFileChange = async (event) => {
   const files = Array.from(event.target.files || [])
   
   if (files.length === 0) return
@@ -88,39 +122,82 @@ const handleFileChange = (event) => {
   // 限制图片数量
   if (imageList.value.length + files.length > 9) {
     ElMessage.warning('最多只能上传9张图片')
+    event.target.value = ''
     return
   }
 
-  files.forEach(file => {
+  // 处理每个文件
+  for (const file of files) {
     // 验证文件类型
     if (!file.type.startsWith('image/')) {
       ElMessage.warning(`${file.name} 不是图片文件`)
-      return
+      continue
     }
 
     // 验证文件大小（限制5MB）
     if (file.size > 5 * 1024 * 1024) {
       ElMessage.warning(`${file.name} 文件大小超过5MB`)
-      return
+      continue
     }
 
-    // 创建预览URL
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      imageList.value.push({
-        name: file.name,
-        file: file,
-        url: e.target.result
-      })
+    // 创建本地预览URL
+    const localUrl = URL.createObjectURL(file)
+    
+    // 添加到列表（标记为上传中）
+    const imageItem = {
+      name: file.name,
+      file: file,
+      url: localUrl,
+      ossUrl: null,
+      uploading: true
     }
-    reader.readAsDataURL(file)
-  })
+    imageList.value.push(imageItem)
+
+    // 立即上传到 OSS
+    try {
+      const res = await uploadFile(file, 'ai-consult')
+      
+      if (res.code === 200) {
+        // 上传成功，找到对应的图片项并更新
+        const index = imageList.value.indexOf(imageItem)
+        if (index > -1) {
+          // 创建新对象替换，确保响应式更新
+          imageList.value[index] = {
+            ...imageItem,
+            ossUrl: res.data.url,
+            url: res.data.url,
+            uploading: false
+          }
+          // 释放本地预览URL
+          URL.revokeObjectURL(localUrl)
+          console.log('图片上传成功:', res.data.url)
+        }
+      } else {
+        throw new Error(res.message || '上传失败')
+      }
+    } catch (error) {
+      console.error('图片上传失败:', error)
+      ElMessage.error(`${file.name} 上传失败：${error.message || '未知错误'}`)
+      // 移除上传失败的图片
+      const index = imageList.value.indexOf(imageItem)
+      if (index > -1) {
+        imageList.value.splice(index, 1)
+      }
+      // 释放本地预览URL
+      URL.revokeObjectURL(localUrl)
+    }
+  }
 
   // 清空input，以便可以重复选择同一文件
   event.target.value = ''
 }
 
 const removeImage = (index) => {
+  const image = imageList.value[index]
+  // 如果是本地预览URL，释放它
+  if (image.url && image.url.startsWith('blob:')) {
+    URL.revokeObjectURL(image.url)
+  }
   imageList.value.splice(index, 1)
 }
 
@@ -128,28 +205,35 @@ const handleKeyDown = (event) => {
   // Enter发送，Shift+Enter换行
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault()
-    if ((inputValue.value.trim() || imageList.value.length > 0) && !props.disabled) {
+    if (!isButtonDisabled.value) {
       handleSend()
     }
   }
 }
 
 const handleSend = () => {
-  if ((!inputValue.value.trim() && imageList.value.length === 0) || props.disabled) {
+  if (isButtonDisabled.value) {
     return
   }
 
+  // 只发送已上传成功的图片的 OSS URL
+  const uploadedImages = imageList.value
+    .filter(img => !img.uploading && img.ossUrl)
+    .map(img => img.ossUrl)
+
   emit('send', {
     content: inputValue.value.trim(),
-    images: imageList.value.map(img => ({
-      name: img.name,
-      file: img.file,
-      url: img.url
-    }))
+    images: uploadedImages
   })
   
   // 清空输入和图片
   inputValue.value = ''
+  // 释放所有本地预览URL
+  imageList.value.forEach(img => {
+    if (img.url && img.url.startsWith('blob:')) {
+      URL.revokeObjectURL(img.url)
+    }
+  })
   imageList.value = []
 }
 </script>

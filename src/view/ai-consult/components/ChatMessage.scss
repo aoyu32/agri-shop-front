@@ -77,49 +77,102 @@
     gap: 6px;
     max-width: 70%;
 
-      .message-bubble {
-        padding: 12px 16px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        word-wrap: break-word;
-        line-height: 1.6;
+    .message-bubble {
+      padding: 12px 16px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      word-wrap: break-word;
+      line-height: 1.6;
 
-        .message-images {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
+      .message-images {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+
+        &:not(:last-child) {
           margin-bottom: 8px;
+        }
 
-          .image-item {
-            position: relative;
-            width: 120px;
-            height: 120px;
-            border-radius: 6px;
-            overflow: hidden;
-            cursor: pointer;
-            border: 1px solid var(--border-color);
-            transition: all 0.3s;
+        .image-item {
+          position: relative;
+          width: 120px;
+          height: 120px;
+          border-radius: 6px;
+          overflow: hidden;
+          cursor: pointer;
+          border: 1px solid var(--border-color);
+          transition: all 0.3s;
 
-            &:hover {
-              transform: scale(1.05);
-              box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-            }
+          &:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+          }
 
-            img {
-              width: 100%;
-              height: 100%;
-              object-fit: cover;
-            }
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
           }
         }
+      }
 
-        .text-content {
+      .text-content {
+        white-space: pre-wrap;
+
+        &.streaming {
+          // 流式输出时的样式
           white-space: pre-wrap;
+          word-break: break-word;
         }
+
+        &:empty {
+          display: none;
+        }
+      }
+
+      .markdown-content {
+        &:empty {
+          display: none;
+        }
+      }
+
+      // Loading 动画
+      .loading-dots {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 0;
+
+        span {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background-color: var(--theme-primary-color);
+          animation: loadingDot 1.4s infinite ease-in-out both;
+
+          &:nth-child(1) {
+            animation-delay: -0.32s;
+          }
+
+          &:nth-child(2) {
+            animation-delay: -0.16s;
+          }
+
+          &:nth-child(3) {
+            animation-delay: 0s;
+          }
+        }
+      }
 
       // Markdown样式
       :deep(.markdown-content) {
-        h1, h2, h3, h4, h5, h6 {
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
           margin: 16px 0 8px;
           font-weight: 600;
           line-height: 1.4;
@@ -162,7 +215,8 @@
           }
         }
 
-        ul, ol {
+        ul,
+        ol {
           margin: 8px 0;
           padding-left: 24px;
 
@@ -220,6 +274,21 @@
           }
         }
 
+        img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 6px;
+          margin: 8px 0;
+          cursor: pointer;
+          transition: all 0.3s;
+          border: 1px solid var(--border-color);
+
+          &:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          }
+        }
+
         hr {
           margin: 16px 0;
           border: none;
@@ -231,7 +300,8 @@
           border-collapse: collapse;
           margin: 12px 0;
 
-          th, td {
+          th,
+          td {
             padding: 8px 12px;
             border: 1px solid var(--border-color);
             text-align: left;
@@ -258,6 +328,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -273,3 +344,17 @@
   }
 }
 
+@keyframes loadingDot {
+
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
