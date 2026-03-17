@@ -9,9 +9,7 @@
         <div class="card-content">
           <div class="card-title">今日订单</div>
           <div class="card-value">{{ stats.todayOrders }}</div>
-          <div class="card-trend up">
-            <span>较昨日 +12%</span>
-          </div>
+          <div class="card-desc">总单量 {{ stats.totalOrders }}</div>
         </div>
       </div>
 
@@ -22,9 +20,7 @@
         <div class="card-content">
           <div class="card-title">今日销售额</div>
           <div class="card-value">¥{{ stats.todaySales }}</div>
-          <div class="card-trend up">
-            <span>较昨日 +8%</span>
-          </div>
+          <div class="card-desc">总销售额 ¥{{ stats.totalSales }}</div>
         </div>
       </div>
 
@@ -123,35 +119,93 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { getMerchantDashboard } from '@/apis/merchant'
+import { getMyShop } from '@/apis/shop'
 
 const router = useRouter()
 
 // 统计数据
 const stats = ref({
-  todayOrders: 28,
-  todaySales: 3580,
-  totalProducts: 48,
-  onSaleProducts: 42,
-  pendingReviews: 5,
-  totalReviews: 89
+  todayOrders: 0,
+  todaySales: 0,
+  totalOrders: 0,
+  totalSales: 0,
+  totalProducts: 0,
+  onSaleProducts: 0,
+  pendingReviews: 0,
+  totalReviews: 0
 })
 
 // 店铺信息
 const shopInfo = ref({
-  shopName: '绿野农场',
-  phone: '139****0002',
-  address: '山东省 潍坊市 寿光市',
-  description: '专注有机蔬菜种植20年，为您提供最新鲜、最健康的农产品。'
+  shopName: '',
+  phone: '',
+  address: '',
+  description: ''
 })
 
 // 待处理事项
 const pendingTasks = ref({
-  toShip: 8,
-  toReply: 5,
-  lowStock: 3
+  toShip: 0,
+  toReply: 0,
+  lowStock: 0
 })
+
+// 加载统计数据
+const loadDashboard = async () => {
+  try {
+    const res = await getMerchantDashboard()
+    if (res.code === 200) {
+      const data = res.data
+      
+      // 更新统计数据
+      stats.value = {
+        todayOrders: data.stats.today_orders,
+        todaySales: data.stats.today_sales,
+        totalOrders: data.stats.total_orders,
+        totalSales: data.stats.total_sales,
+        totalProducts: data.stats.total_products,
+        onSaleProducts: data.stats.on_sale_products,
+        pendingReviews: data.stats.pending_reviews,
+        totalReviews: data.stats.total_reviews
+      }
+      
+      // 更新待处理事项
+      pendingTasks.value = {
+        toShip: data.pending_tasks.to_ship,
+        toReply: data.pending_tasks.to_reply,
+        lowStock: data.pending_tasks.low_stock
+      }
+    } else {
+      ElMessage.error(res.message || '加载数据失败')
+    }
+  } catch (error) {
+    console.error('加载数据概览失败:', error)
+    ElMessage.error(error.message || '加载数据失败')
+  }
+}
+
+// 加载店铺信息
+const loadShopInfo = async () => {
+  try {
+    const res = await getMyShop()
+    if (res.code === 200) {
+      const shop = res.data.shop
+      const user = res.data.user
+      shopInfo.value = {
+        shopName: shop.shop_name || '',
+        phone: user.phone || '',
+        address: shop.location || '',
+        description: shop.description || ''
+      }
+    }
+  } catch (error) {
+    console.error('加载店铺信息失败:', error)
+  }
+}
 
 const goToSettings = () => {
   router.push('/merchant/profile?menu=shop-settings')
@@ -168,6 +222,12 @@ const goToReviews = () => {
 const goToProducts = () => {
   router.push('/merchant/profile?menu=product-list')
 }
+
+// 页面加载时获取数据
+onMounted(() => {
+  loadDashboard()
+  loadShopInfo()
+})
 </script>
 
 <style lang="scss" scoped>
