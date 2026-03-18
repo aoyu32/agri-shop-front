@@ -60,29 +60,128 @@ import ProductRankChart from './components/ProductRankChart.vue'
 import CategoryDistributionChart from './components/CategoryDistributionChart.vue'
 import AIForecast from './components/AIForecast.vue'
 import {
-  shopSalesTrendData as mockShopSalesTrendData,
-  platformSalesTrendData as mockPlatformSalesTrendData,
-  shopProductRankData as mockShopProductRankData,
-  platformProductRankData as mockPlatformProductRankData,
-  shopCategoryDistributionData as mockShopCategoryDistributionData,
-  platformCategoryDistributionData as mockPlatformCategoryDistributionData,
-  aiForecastData as mockAiForecastData
-} from '@/mock/market-forecast/forecast-data'
+  getShopSalesTrend,
+  getPlatformSalesTrend,
+  getShopProductRank,
+  getPlatformProductRank,
+  getShopCategoryDistribution,
+  getPlatformCategoryDistribution
+} from '@/apis/market-forecast'
 
 // 数据
-const shopSalesTrendData = ref(mockShopSalesTrendData)
-const platformSalesTrendData = ref(mockPlatformSalesTrendData)
-const shopProductRankData = ref(mockShopProductRankData)
-const platformProductRankData = ref(mockPlatformProductRankData)
-const shopCategoryDistributionData = ref(mockShopCategoryDistributionData)
-const platformCategoryDistributionData = ref(mockPlatformCategoryDistributionData)
-const aiForecastData = ref(mockAiForecastData)
+const shopSalesTrendData = ref({
+  week: { dates: [], sales: [], orders: [] },
+  month: { dates: [], sales: [], orders: [] },
+  quarter: { dates: [], sales: [], orders: [] }
+})
+const platformSalesTrendData = ref({
+  week: { dates: [], sales: [], orders: [] },
+  month: { dates: [], sales: [], orders: [] },
+  quarter: { dates: [], sales: [], orders: [] }
+})
+const shopProductRankData = ref([])
+const platformProductRankData = ref([])
+const shopCategoryDistributionData = ref([])
+const platformCategoryDistributionData = ref([])
+const aiForecastData = ref({})
 const forecastLoading = ref(false)
+const loading = ref(false)
+
+// 加载店铺销售趋势
+const loadShopSalesTrend = async (timeRange = 'month') => {
+  try {
+    const res = await getShopSalesTrend(timeRange)
+    if (res.code === 200) {
+      shopSalesTrendData.value = res.data
+    }
+  } catch (error) {
+    console.error('加载店铺销售趋势失败:', error)
+  }
+}
+
+// 加载平台销售趋势
+const loadPlatformSalesTrend = async (timeRange = 'month') => {
+  try {
+    const res = await getPlatformSalesTrend(timeRange)
+    if (res.code === 200) {
+      platformSalesTrendData.value = res.data
+    }
+  } catch (error) {
+    console.error('加载平台销售趋势失败:', error)
+  }
+}
+
+// 加载店铺热销农产品
+const loadShopProductRank = async () => {
+  try {
+    const res = await getShopProductRank()
+    if (res.code === 200) {
+      shopProductRankData.value = res.data
+    }
+  } catch (error) {
+    console.error('加载店铺热销农产品失败:', error)
+  }
+}
+
+// 加载平台热销农产品
+const loadPlatformProductRank = async () => {
+  try {
+    const res = await getPlatformProductRank()
+    if (res.code === 200) {
+      platformProductRankData.value = res.data
+    }
+  } catch (error) {
+    console.error('加载平台热销农产品失败:', error)
+  }
+}
+
+// 加载店铺品类分布
+const loadShopCategoryDistribution = async () => {
+  try {
+    const res = await getShopCategoryDistribution()
+    if (res.code === 200) {
+      shopCategoryDistributionData.value = res.data
+    }
+  } catch (error) {
+    console.error('加载店铺品类分布失败:', error)
+  }
+}
+
+// 加载平台品类分布
+const loadPlatformCategoryDistribution = async () => {
+  try {
+    const res = await getPlatformCategoryDistribution()
+    if (res.code === 200) {
+      platformCategoryDistributionData.value = res.data
+    }
+  } catch (error) {
+    console.error('加载平台品类分布失败:', error)
+  }
+}
+
+// 加载所有数据
+const loadAllData = async () => {
+  loading.value = true
+  try {
+    await Promise.all([
+      loadShopSalesTrend('month'),
+      loadPlatformSalesTrend('month'),
+      loadShopProductRank(),
+      loadPlatformProductRank(),
+      loadShopCategoryDistribution(),
+      loadPlatformCategoryDistribution()
+    ])
+  } catch (error) {
+    ElMessage.error('加载数据失败')
+  } finally {
+    loading.value = false
+  }
+}
 
 // 时间范围变化
 const handleTimeRangeChange = (range) => {
-  console.log('时间范围变化:', range)
-  // 这里可以根据时间范围重新获取数据
+  loadShopSalesTrend(range)
+  loadPlatformSalesTrend(range)
 }
 
 // 刷新AI预测
@@ -91,16 +190,14 @@ const handleRefreshForecast = () => {
   
   // 模拟AI分析过程
   setTimeout(() => {
-    // 重新触发流式渲染
-    aiForecastData.value = { ...mockAiForecastData }
     forecastLoading.value = false
     ElMessage.success('AI分析完成')
   }, 2000)
 }
 
-// 页面加载时自动生成预测
+// 页面加载时自动获取数据
 onMounted(() => {
-  console.log('行情预测页面加载完成')
+  loadAllData()
 })
 </script>
 
