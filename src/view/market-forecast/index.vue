@@ -65,7 +65,8 @@ import {
   getShopProductRank,
   getPlatformProductRank,
   getShopCategoryDistribution,
-  getPlatformCategoryDistribution
+  getPlatformCategoryDistribution,
+  getAIForecast
 } from '@/apis/market-forecast'
 
 // 数据
@@ -83,7 +84,14 @@ const shopProductRankData = ref([])
 const platformProductRankData = ref([])
 const shopCategoryDistributionData = ref([])
 const platformCategoryDistributionData = ref([])
-const aiForecastData = ref({})
+const aiForecastData = ref({
+  marketHeat: 0,
+  competition: 0,
+  growthPotential: 0,
+  analysis: '',
+  suggestions: '',
+  risks: []
+})
 const forecastLoading = ref(false)
 const loading = ref(false)
 
@@ -159,6 +167,40 @@ const loadPlatformCategoryDistribution = async () => {
   }
 }
 
+// 加载AI预测
+const loadAIForecast = async () => {
+  forecastLoading.value = true
+  try {
+    const res = await getAIForecast()
+    if (res.code === 200) {
+      const data = res.data
+      
+      // 转换数据格式以匹配组件期望的格式
+      aiForecastData.value = {
+        marketHeat: data.metrics.market_heat,
+        competition: data.metrics.competition_index,
+        growthPotential: data.metrics.growth_potential,
+        analysis: data.analysis,
+        suggestions: data.suggestions, // 现在是 Markdown 字符串，不需要格式化
+        risks: data.risks
+      }
+      
+      ElMessage.success('AI分析完成')
+    } else {
+      ElMessage.error(res.message || 'AI分析失败')
+    }
+  } catch (error) {
+    console.error('加载AI预测失败:', error)
+    if (error.message && error.message.includes('timeout')) {
+      ElMessage.error('AI分析超时，请稍后重试')
+    } else {
+      ElMessage.error(error.message || 'AI分析失败，请稍后重试')
+    }
+  } finally {
+    forecastLoading.value = false
+  }
+}
+
 // 加载所有数据
 const loadAllData = async () => {
   loading.value = true
@@ -171,6 +213,9 @@ const loadAllData = async () => {
       loadShopCategoryDistribution(),
       loadPlatformCategoryDistribution()
     ])
+    
+    // 数据加载完成后，不自动加载AI预测，等待用户点击"刷新分析"按钮
+    // await loadAIForecast()
   } catch (error) {
     ElMessage.error('加载数据失败')
   } finally {
@@ -186,13 +231,17 @@ const handleTimeRangeChange = (range) => {
 
 // 刷新AI预测
 const handleRefreshForecast = () => {
-  forecastLoading.value = true
-  
-  // 模拟AI分析过程
-  setTimeout(() => {
-    forecastLoading.value = false
-    ElMessage.success('AI分析完成')
-  }, 2000)
+  // 清空现有数据
+  aiForecastData.value = {
+    marketHeat: 0,
+    competition: 0,
+    growthPotential: 0,
+    analysis: '',
+    suggestions: '',
+    risks: []
+  }
+  // 重新加载
+  loadAIForecast()
 }
 
 // 页面加载时自动获取数据

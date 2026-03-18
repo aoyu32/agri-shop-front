@@ -11,7 +11,7 @@
       </el-button>
     </div>
 
-    <div class="forecast-content" v-loading="loading">
+    <div class="forecast-content" v-loading="loading" :element-loading-text="currentLoadingText">
       <!-- 综合评分 -->
       <div class="score-section">
         <div class="score-card">
@@ -103,6 +103,23 @@ const props = defineProps({
 
 const emit = defineEmits(['refresh'])
 
+// AI 分析步骤提示
+const analysisSteps = [
+  '正在收集市场数据...',
+  '正在分析销售趋势...',
+  '正在评估竞争态势...',
+  '正在计算市场热度...',
+  '正在分析品类结构...',
+  '正在预测增长潜力...',
+  '正在生成调整建议...',
+  '正在识别潜在风险...',
+  '正在整理分析报告...'
+]
+
+// 当前显示的加载提示
+const currentLoadingText = ref('AI正在分析中...')
+let loadingTimer = null
+
 // 流式渲染的文本
 const streamedAnalysis = ref('')
 const streamedSuggestions = ref('')
@@ -115,6 +132,39 @@ const isStreaming = ref(false)
 marked.setOptions({
   breaks: true,
   gfm: true
+})
+
+// 开始加载动画 - 顺序显示分析步骤，到最后一个后停止
+const startLoadingAnimation = () => {
+  let stepIndex = 0
+  currentLoadingText.value = analysisSteps[0]
+  
+  loadingTimer = setInterval(() => {
+    stepIndex++
+    if (stepIndex < analysisSteps.length) {
+      currentLoadingText.value = analysisSteps[stepIndex]
+    } else {
+      // 到达最后一个步骤后停止切换，保持显示最后一个
+      stopLoadingAnimation()
+    }
+  }, 2000 + Math.random() * 1000) // 2-3秒随机切换
+}
+
+// 停止加载动画
+const stopLoadingAnimation = () => {
+  if (loadingTimer) {
+    clearInterval(loadingTimer)
+    loadingTimer = null
+  }
+}
+
+// 监听 loading 状态变化
+watch(() => props.loading, (newLoading) => {
+  if (newLoading) {
+    startLoadingAnimation()
+  } else {
+    stopLoadingAnimation()
+  }
 })
 
 // 渲染后的 markdown 内容
@@ -265,6 +315,8 @@ onUnmounted(() => {
   if (content) {
     content.removeEventListener('scroll', handleScroll)
   }
+  // 清理定时器
+  stopLoadingAnimation()
 })
 </script>
 
@@ -278,6 +330,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
 
   .forecast-header {
     display: flex;
@@ -309,6 +362,8 @@ onUnmounted(() => {
     overflow-y: auto;
     padding-right: 8px;
     scroll-behavior: smooth;
+    position: relative;
+    min-height: 400px;
 
     &::-webkit-scrollbar {
       width: 6px;
@@ -436,4 +491,5 @@ onUnmounted(() => {
     }
   }
 }
+
 </style>

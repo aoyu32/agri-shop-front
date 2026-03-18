@@ -61,3 +61,15 @@ export function getPlatformCategoryDistribution() {
         method: 'get'
     })
 }
+
+/**
+ * 获取AI行情预测
+ * AI 分析需要较长时间，设置 150 秒超时
+ */
+export function getAIForecast() {
+    return request({
+        url: '/api/ai-market/forecast',
+        method: 'get',
+        timeout: 150000 // 150秒超时
+    })
+}
