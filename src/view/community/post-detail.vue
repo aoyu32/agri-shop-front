@@ -56,10 +56,6 @@
               <i class="iconfont icon-dianzan"></i>
               {{ post.isLiked ? '已点赞' : '点赞' }} ({{ post.likes }})
             </el-button>
-            <el-button @click="handleCollect">
-              <i class="iconfont icon-shoucang"></i>
-              收藏
-            </el-button>
           </div>
         </div>
 
@@ -170,19 +166,19 @@
           </div>
           <div class="user-stats">
             <div class="stat-item">
-              <div class="stat-value">128</div>
+              <div class="stat-value">{{ userStats.post_count }}</div>
               <div class="stat-label">帖子</div>
             </div>
             <div class="stat-item">
-              <div class="stat-value">2.3k</div>
+              <div class="stat-value">{{ userStats.like_count }}</div>
               <div class="stat-label">获赞</div>
             </div>
             <div class="stat-item">
-              <div class="stat-value">856</div>
-              <div class="stat-label">收藏</div>
+              <div class="stat-value">{{ userStats.comment_count }}</div>
+              <div class="stat-label">评论</div>
             </div>
             <div class="stat-item">
-              <div class="stat-value">15.6k</div>
+              <div class="stat-value">{{ userStats.view_count }}</div>
               <div class="stat-label">浏览</div>
             </div>
           </div>
@@ -216,8 +212,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import MarkdownRenderer from '@/components/markdown-renderer/index.vue'
-import { communityPosts } from '@/mock/community/posts'
-import { postComments } from '@/mock/community/comments'
+import { getPostDetail, getRelatedPosts, getCommentList, createComment, toggleCommentLike, togglePostLike, getUserStats } from '@/apis/community'
 
 const route = useRoute()
 const router = useRouter()
@@ -228,44 +223,149 @@ const comments = ref([])
 const newComment = ref('')
 const replyContent = ref('')
 const replyingTo = ref(null)
+const relatedPostsList = ref([])
+const userStats = ref({
+  post_count: 0,
+  like_count: 0,
+  comment_count: 0,
+  view_count: 0
+})
+const loading = ref(false)
 
 // 计算属性
 const relatedPosts = computed(() => {
-  if (!post.value) return []
-  return communityPosts
-    .filter(p => p.id !== post.value.id)
-    .slice(0, 5)
+  return relatedPostsList.value
 })
 
 // 生命周期
 onMounted(() => {
   loadPost()
+  loadComments()
+  loadRelatedPosts()
+  loadUserStats()
 })
 
-// 方法
-const loadPost = () => {
-  const postId = parseInt(route.params.id)
-  const foundPost = communityPosts.find(p => p.id === postId)
-  
-  if (foundPost) {
-    post.value = { ...foundPost }
-    comments.value = postComments[postId] || []
-    // 增加浏览量
-    post.value.views += 1
-  } else {
-    ElMessage.error('帖子不存在')
+// 加载帖子详情
+const loadPost = async () => {
+  try {
+    loading.value = true
+    const postId = parseInt(route.params.id)
+    const res = await getPostDetail({ id: postId })
+    if (res.code === 200) {
+      const data = res.data
+      post.value = {
+        id: data.id,
+        title: data.title,
+        content: data.content,
+        images: data.images || [],
+        category: data.category,
+        tags: data.tags || [],
+        views: data.view_count,
+        likes: data.like_count,
+        comments: data.comment_count,
+        isLiked: data.is_liked,
+        createTime: data.created_at,
+        author: {
+          id: data.author.id,
+          name: data.author.nickname || data.author.username,
+          avatar: data.author.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.author.username}`
+        }
+      }
+    } else {
+      ElMessage.error(res.message || '帖子不存在')
+      router.push({ name: 'Community' })
+    }
+  } catch (error) {
+    console.error('加载帖子详情失败:', error)
+    ElMessage.error('加载帖子详情失败')
     router.push({ name: 'Community' })
+  } finally {
+    loading.value = false
   }
 }
 
-const handleLike = () => {
-  post.value.isLiked = !post.value.isLiked
-  post.value.likes += post.value.isLiked ? 1 : -1
-  ElMessage.success(post.value.isLiked ? '点赞成功' : '取消点赞')
+// 加载评论列表
+const loadComments = async () => {
+  try {
+    const postId = parseInt(route.params.id)
+    const res = await getCommentList({ post_id: postId })
+    if (res.code === 200) {
+      comments.value = res.data.map(comment => ({
+        id: comment.id,
+        content: comment.content,
+        likes: comment.like_count,
+        isLiked: comment.is_liked,
+        createTime: comment.created_at,
+        author: {
+          id: comment.author.id,
+          name: comment.author.nickname || comment.author.username,
+          avatar: comment.author.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${comment.author.username}`
+        },
+        replies: (comment.replies || []).map(reply => ({
+          id: reply.id,
+          content: reply.content,
+          likes: reply.like_count,
+          isLiked: reply.is_liked,
+          createTime: reply.created_at,
+          author: {
+            id: reply.author.id,
+            name: reply.author.nickname || reply.author.username,
+            avatar: reply.author.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${reply.author.username}`
+          },
+          replyTo: reply.reply_to ? {
+            id: reply.reply_to.id,
+            name: reply.reply_to.nickname || reply.reply_to.username
+          } : null
+        }))
+      }))
+    }
+  } catch (error) {
+    console.error('加载评论列表失败:', error)
+  }
 }
 
-const handleCollect = () => {
-  ElMessage.success('收藏成功')
+// 加载相关推荐
+const loadRelatedPosts = async () => {
+  try {
+    const postId = parseInt(route.params.id)
+    const res = await getRelatedPosts({ id: postId, limit: 5 })
+    if (res.code === 200) {
+      relatedPostsList.value = res.data.map(post => ({
+        id: post.id,
+        title: post.title,
+        views: post.view_count,
+        likes: post.like_count
+      }))
+    }
+  } catch (error) {
+    console.error('加载相关推荐失败:', error)
+  }
+}
+
+// 加载用户统计
+const loadUserStats = async () => {
+  try {
+    const res = await getUserStats()
+    if (res.code === 200) {
+      userStats.value = res.data
+    }
+  } catch (error) {
+    console.error('加载用户统计失败:', error)
+  }
+}
+
+const handleLike = async () => {
+  try {
+    const res = await togglePostLike({ post_id: post.value.id })
+    if (res.code === 200) {
+      post.value.isLiked = res.data.is_liked
+      post.value.likes = res.data.like_count
+      ElMessage.success(res.message)
+    }
+  } catch (error) {
+    console.error('点赞失败:', error)
+    ElMessage.error('操作失败')
+  }
 }
 
 const handleShare = () => {
@@ -276,37 +376,63 @@ const handlePublish = () => {
   router.push('/community/create')
 }
 
-const submitComment = () => {
+const submitComment = async () => {
   if (!newComment.value.trim()) return
   
-  const comment = {
-    id: Date.now(),
-    content: newComment.value,
-    author: {
-      id: 999,
-      name: '当前用户',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face'
-    },
-    likes: 0,
-    createTime: new Date().toLocaleString(),
-    isLiked: false,
-    replies: []
+  try {
+    const res = await createComment({
+      post_id: post.value.id,
+      content: newComment.value
+    })
+    if (res.code === 200) {
+      const comment = {
+        id: res.data.id,
+        content: res.data.content,
+        likes: res.data.like_count,
+        isLiked: res.data.is_liked,
+        createTime: res.data.created_at,
+        author: {
+          id: res.data.author.id,
+          name: res.data.author.nickname || res.data.author.username,
+          avatar: res.data.author.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${res.data.author.username}`
+        },
+        replies: []
+      }
+      comments.value.unshift(comment)
+      post.value.comments += 1
+      newComment.value = ''
+      ElMessage.success(res.message)
+    }
+  } catch (error) {
+    console.error('评论失败:', error)
+    ElMessage.error('评论失败')
   }
-  
-  comments.value.unshift(comment)
-  post.value.comments += 1
-  newComment.value = ''
-  ElMessage.success('评论发表成功')
 }
 
-const likeComment = (comment) => {
-  comment.isLiked = !comment.isLiked
-  comment.likes += comment.isLiked ? 1 : -1
+const likeComment = async (comment) => {
+  try {
+    const res = await toggleCommentLike({ comment_id: comment.id })
+    if (res.code === 200) {
+      comment.isLiked = res.data.is_liked
+      comment.likes = res.data.like_count
+    }
+  } catch (error) {
+    console.error('点赞失败:', error)
+    ElMessage.error('操作失败')
+  }
 }
 
-const likeReply = (reply) => {
-  reply.isLiked = !reply.isLiked
-  reply.likes += reply.isLiked ? 1 : -1
+const likeReply = async (reply) => {
+  try {
+    const res = await toggleCommentLike({ comment_id: reply.id })
+    if (res.code === 200) {
+      reply.isLiked = res.data.is_liked
+      reply.likes = res.data.like_count
+    }
+  } catch (error) {
+    console.error('点赞失败:', error)
+    ElMessage.error('操作失败')
+  }
 }
 
 const replyComment = (comment) => {
@@ -319,29 +445,42 @@ const cancelReply = () => {
   replyContent.value = ''
 }
 
-const submitReply = (comment) => {
+const submitReply = async (comment) => {
   if (!replyContent.value.trim()) return
   
-  const reply = {
-    id: Date.now(),
-    content: replyContent.value,
-    author: {
-      id: 999,
-      name: '当前用户',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face'
-    },
-    likes: 0,
-    createTime: new Date().toLocaleString(),
-    isLiked: false
+  try {
+    const res = await createComment({
+      post_id: post.value.id,
+      content: replyContent.value,
+      parent_id: comment.id,
+      reply_to_user_id: comment.author.id
+    })
+    if (res.code === 200) {
+      const reply = {
+        id: res.data.id,
+        content: res.data.content,
+        likes: res.data.like_count,
+        isLiked: res.data.is_liked,
+        createTime: res.data.created_at,
+        author: {
+          id: res.data.author.id,
+          name: res.data.author.nickname || res.data.author.username,
+          avatar: res.data.author.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${res.data.author.username}`
+        }
+      }
+      
+      if (!comment.replies) {
+        comment.replies = []
+      }
+      comment.replies.push(reply)
+      
+      cancelReply()
+      ElMessage.success(res.message)
+    }
+  } catch (error) {
+    console.error('回复失败:', error)
+    ElMessage.error('回复失败')
   }
-  
-  if (!comment.replies) {
-    comment.replies = []
-  }
-  comment.replies.push(reply)
-  
-  cancelReply()
-  ElMessage.success('回复成功')
 }
 
 const previewImage = (images, index) => {

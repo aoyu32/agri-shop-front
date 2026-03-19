@@ -10,7 +10,7 @@
             :key="tab.key"
             class="tab-item"
             :class="{ active: activeTab === tab.key }"
-            @click="activeTab = tab.key"
+            @click="activeTab = tab.key; loadPosts()"
           >
             {{ tab.label }}
           </div>
@@ -18,6 +18,20 @@
 
         <!-- 帖子列表 -->
         <div class="posts-list">
+          <!-- 空状态 -->
+          <div v-if="!loading && filteredPosts.length === 0" class="empty-state">
+            <div class="empty-icon">
+              <i class="iconfont icon-wenzhang"></i>
+            </div>
+            <div class="empty-text">暂无帖子</div>
+            <div class="empty-desc">{{ activeTab === 'all' ? '还没有人发布帖子，快来发布第一个吧！' : '该分类下暂无帖子' }}</div>
+            <el-button type="primary" @click="handlePublish">
+              <i class="iconfont icon-bianji"></i>
+              发布帖子
+            </el-button>
+          </div>
+
+          <!-- 帖子列表 -->
           <div
             v-for="post in filteredPosts"
             :key="post.id"
@@ -83,9 +97,9 @@
         <div class="user-card">
           <div class="user-header">
             <div class="user-info">
-              <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=user-xiaowang" alt="用户头像" class="user-avatar" />
+              <img :src="currentUser.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=user'" alt="用户头像" class="user-avatar" />
               <div class="user-details">
-                <div class="user-name">农户小王</div>
+                <div class="user-name">{{ currentUser.nickname || currentUser.username || '游客' }}</div>
               </div>
             </div>
             <el-button type="primary" class="publish-btn" @click="handlePublish">
@@ -95,19 +109,19 @@
           </div>
           <div class="user-stats">
             <div class="stat-item">
-              <div class="stat-value">128</div>
+              <div class="stat-value">{{ userStats.post_count }}</div>
               <div class="stat-label">帖子</div>
             </div>
             <div class="stat-item">
-              <div class="stat-value">2.3k</div>
+              <div class="stat-value">{{ userStats.like_count }}</div>
               <div class="stat-label">获赞</div>
             </div>
             <div class="stat-item">
-              <div class="stat-value">856</div>
-              <div class="stat-label">收藏</div>
+              <div class="stat-value">{{ userStats.comment_count }}</div>
+              <div class="stat-label">评论</div>
             </div>
             <div class="stat-item">
-              <div class="stat-value">15.6k</div>
+              <div class="stat-value">{{ userStats.view_count }}</div>
               <div class="stat-label">浏览</div>
             </div>
           </div>
@@ -120,6 +134,13 @@
             热门帖子
           </h3>
           <div class="posts-list">
+            <!-- 空状态 -->
+            <div v-if="hotPosts.length === 0" class="hot-posts-empty">
+              <i class="iconfont icon-zanwushuju"></i>
+              <span>暂无热门帖子</span>
+            </div>
+
+            <!-- 热门帖子列表 -->
             <div
               v-for="hotPost in hotPosts"
               :key="hotPost.id"
@@ -140,64 +161,122 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { communityPosts, hotTopics } from '@/mock/community/posts'
+import { getPostList, getHotPosts, getUserStats, togglePostLike } from '@/apis/community'
+import { POST_CATEGORIES } from '@/constants/community'
+import { useUserStore } from '@/store/modules/user'
 
 const router = useRouter()
+const userStore = useUserStore()
 
 // 响应式数据
 const searchKeyword = ref('')
 const activeTab = ref('all')
-const posts = ref([...communityPosts])
+const posts = ref([])
+const hotPostsList = ref([])
+const userStats = ref({
+  post_count: 0,
+  like_count: 0,
+  comment_count: 0,
+  view_count: 0
+})
+const loading = ref(false)
 
-// 分类标签
+// 当前用户信息
+const currentUser = computed(() => userStore.userInfo)
+
+// 分类标签 - 从常量中获取
 const categoryTabs = [
   { key: 'all', label: '全部' },
-  { key: 'tech', label: '种植技术' },
-  { key: 'market', label: '市场行情' },
-  { key: 'share', label: '经验分享' },
-  { key: 'question', label: '求助问答' }
+  ...POST_CATEGORIES.map(cat => ({ key: cat.value, label: cat.label }))
 ]
 
 // 计算属性
 const filteredPosts = computed(() => {
-  let result = posts.value
-
-  // 根据分类筛选
-  if (activeTab.value !== 'all') {
-    const filterMap = {
-      tech: ['种植技术', '有机农业', '病虫害防治'],
-      market: ['市场分析', '价格走势', '农产品'],
-      share: ['丰收', '经验分享', 'DIY'],
-      question: ['新手求教', '种植入门']
-    }
-    const filterTags = filterMap[activeTab.value] || []
-    result = result.filter(post => 
-      post.tags.some(tag => filterTags.includes(tag))
-    )
-  }
-
-  // 根据搜索关键词筛选
-  if (searchKeyword.value) {
-    const keyword = searchKeyword.value.toLowerCase()
-    result = result.filter(post =>
-      post.title.toLowerCase().includes(keyword) ||
-      post.content.toLowerCase().includes(keyword) ||
-      post.tags.some(tag => tag.toLowerCase().includes(keyword))
-    )
-  }
-
-  return result
+  return posts.value
 })
 
-// 热门帖子（按浏览量和点赞数排序）
+// 热门帖子
 const hotPosts = computed(() => {
-  return [...communityPosts]
-    .sort((a, b) => (b.views + b.likes * 2) - (a.views + a.likes * 2))
-    .slice(0, 8)
+  return hotPostsList.value
 })
+
+// 生命周期
+onMounted(() => {
+  loadPosts()
+  loadHotPosts()
+  loadUserStats()
+})
+
+// 加载帖子列表
+const loadPosts = async () => {
+  try {
+    loading.value = true
+    const params = {
+      category: activeTab.value === 'all' ? '' : activeTab.value,
+      keyword: searchKeyword.value,
+      page: 1,
+      page_size: 20
+    }
+    const res = await getPostList(params)
+    if (res.code === 200) {
+      posts.value = res.data.list.map(post => ({
+        id: post.id,
+        title: post.title,
+        content: post.content,
+        images: post.images || [],
+        category: post.category,
+        tags: post.tags || [],
+        views: post.view_count,
+        likes: post.like_count,
+        comments: post.comment_count,
+        isLiked: post.is_liked,
+        createTime: post.created_at,
+        author: {
+          id: post.author.id,
+          name: post.author.nickname || post.author.username,
+          avatar: post.author.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author.username}`
+        }
+      }))
+    }
+  } catch (error) {
+    console.error('加载帖子列表失败:', error)
+    ElMessage.error('加载帖子列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 加载热门帖子
+const loadHotPosts = async () => {
+  try {
+    const res = await getHotPosts({ limit: 8 })
+    if (res.code === 200) {
+      hotPostsList.value = res.data.map(post => ({
+        id: post.id,
+        title: post.title,
+        views: post.view_count,
+        likes: post.like_count
+      }))
+    }
+  } catch (error) {
+    console.error('加载热门帖子失败:', error)
+  }
+}
+
+// 加载用户统计
+const loadUserStats = async () => {
+  try {
+    const res = await getUserStats()
+    if (res.code === 200) {
+      userStats.value = res.data
+    }
+  } catch (error) {
+    console.error('加载用户统计失败:', error)
+  }
+}
 
 // 获取帖子摘要
 const getPostExcerpt = (content) => {
@@ -208,17 +287,8 @@ const getPostExcerpt = (content) => {
 
 // 获取帖子类别
 const getPostCategory = (post) => {
-  // 根据标签确定类别
-  if (post.tags.includes('种植技术') || post.tags.includes('有机农业')) {
-    return '种植技术'
-  } else if (post.tags.includes('市场分析') || post.tags.includes('价格走势')) {
-    return '市场行情'
-  } else if (post.tags.includes('丰收') || post.tags.includes('经验分享')) {
-    return '经验分享'
-  } else if (post.tags.includes('新手求教') || post.tags.includes('种植入门')) {
-    return '求助问答'
-  }
-  return '综合讨论'
+  const category = POST_CATEGORIES.find(cat => cat.value === post.category)
+  return category ? category.label : '综合讨论'
 }
 
 // 事件处理
@@ -240,10 +310,18 @@ const handlePostClick = (post) => {
   window.open(route.href, '_blank')
 }
 
-const handleLike = (post) => {
-  post.isLiked = !post.isLiked
-  post.likes += post.isLiked ? 1 : -1
-  ElMessage.success(post.isLiked ? '点赞成功' : '取消点赞')
+const handleLike = async (post) => {
+  try {
+    const res = await togglePostLike({ post_id: post.id })
+    if (res.code === 200) {
+      post.isLiked = res.data.is_liked
+      post.likes = res.data.like_count
+      ElMessage.success(res.message)
+    }
+  } catch (error) {
+    console.error('点赞失败:', error)
+    ElMessage.error('操作失败')
+  }
 }
 
 const handleShare = (post) => {

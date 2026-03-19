@@ -15,22 +15,39 @@
       label-position="top"
       class="post-form"
     >
-        <el-form-item label="帖子标题" prop="title">
-          <el-input
-            v-model="form.title"
-            placeholder="请输入帖子标题（5-50字）"
-            maxlength="50"
-            show-word-limit
-          />
-        </el-form-item>
+        <div class="form-row">
+          <el-form-item label="帖子标题" prop="title" class="form-item-title">
+            <el-input
+              v-model="form.title"
+              placeholder="请输入帖子标题（5-100字）"
+              maxlength="100"
+              show-word-limit
+            />
+          </el-form-item>
+
+          <el-form-item label="帖子分类" prop="category" class="form-item-category">
+            <el-select
+              v-model="form.category"
+              placeholder="请选择分类"
+              style="width: 100%"
+            >
+              <el-option
+                v-for="item in categoryOptions"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
+          </el-form-item>
+        </div>
 
         <el-form-item label="帖子摘要" prop="summary">
           <el-input
             v-model="form.summary"
             type="textarea"
             :rows="3"
-            placeholder="请输入帖子摘要，简要描述帖子内容（10-200字）"
-            maxlength="200"
+            placeholder="请输入帖子摘要，简要描述帖子内容（10-300字）"
+            maxlength="300"
             show-word-limit
           />
         </el-form-item>
@@ -93,6 +110,9 @@ import gfm from '@bytemd/plugin-gfm'
 import highlight from '@bytemd/plugin-highlight'
 import 'bytemd/dist/index.css'
 import 'highlight.js/styles/vs.css'
+import { uploadFile } from '@/apis/oss'
+import { createPost } from '@/apis/community'
+import { POST_CATEGORIES } from '@/constants/community'
 
 const router = useRouter()
 const formRef = ref(null)
@@ -101,8 +121,12 @@ const submitting = ref(false)
 // 富文本编辑器插件
 const editorPlugins = [gfm(), highlight()]
 
+// 帖子分类选项
+const categoryOptions = POST_CATEGORIES
+
 const form = ref({
   title: '',
+  category: '',
   summary: '',
   content: '',
   images: []
@@ -111,11 +135,14 @@ const form = ref({
 const rules = {
   title: [
     { required: true, message: '请输入帖子标题', trigger: 'blur' },
-    { min: 5, max: 50, message: '标题长度为5-50个字符', trigger: 'blur' }
+    { min: 5, max: 100, message: '标题长度为5-100个字符', trigger: 'blur' }
+  ],
+  category: [
+    { required: true, message: '请选择帖子分类', trigger: 'change' }
   ],
   summary: [
     { required: true, message: '请输入帖子摘要', trigger: 'blur' },
-    { min: 10, max: 200, message: '摘要长度为10-200个字符', trigger: 'blur' }
+    { min: 10, max: 300, message: '摘要长度为10-300个字符', trigger: 'blur' }
   ],
   content: [
     { required: true, message: '请输入帖子内容', trigger: 'blur' },
@@ -128,7 +155,7 @@ const handleEditorChange = (value) => {
   form.value.content = value
 }
 
-const handleImageUpload = (file) => {
+const handleImageUpload = async (file) => {
   const isLt5M = file.size / 1024 / 1024 < 5
   if (!isLt5M) {
     ElMessage.warning('图片大小不能超过 5MB')
@@ -146,14 +173,23 @@ const handleImageUpload = (file) => {
     return false
   }
 
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    form.value.images.push({
-      url: e.target.result,
-      name: file.name
-    })
+  try {
+    // 调用后端上传接口，传入 file 对象和类型
+    const res = await uploadFile(file, 'community')
+    if (res.code === 200) {
+      form.value.images.push({
+        url: res.data.url,
+        name: file.name
+      })
+      ElMessage.success('图片上传成功')
+    } else {
+      ElMessage.error(res.message || '图片上传失败')
+    }
+  } catch (error) {
+    console.error('图片上传失败:', error)
+    ElMessage.error('图片上传失败')
   }
-  reader.readAsDataURL(file)
+  
   return false
 }
 
@@ -169,14 +205,28 @@ const handleSubmit = async () => {
     
     submitting.value = true
     
-    // 模拟发布
-    setTimeout(() => {
+    // 提取图片URL
+    const imageUrls = form.value.images.map(img => img.url)
+    
+    const res = await createPost({
+      title: form.value.title,
+      category: form.value.category,
+      summary: form.value.summary,
+      content: form.value.content,
+      images: imageUrls,
+      tags: [] // 可以后续添加标签功能
+    })
+    
+    if (res.code === 200) {
       ElMessage.success('帖子发布成功！')
-      submitting.value = false
       router.push('/community')
-    }, 1000)
+    } else {
+      ElMessage.error(res.message || '发布失败')
+    }
   } catch (error) {
     console.error('表单验证失败', error)
+  } finally {
+    submitting.value = false
   }
 }
 
@@ -214,6 +264,20 @@ const handleBack = () => {
         font-weight: 600;
         color: var(--text-primary-color);
         margin-bottom: 12px;
+      }
+
+      .form-row {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 0;
+
+        .form-item-title {
+          flex: 1;
+        }
+
+        .form-item-category {
+          width: 200px;
+        }
       }
 
       .image-upload-area {
