@@ -1,87 +1,93 @@
 <template>
-  <div class="admin-page">
-    <div class="admin-header">
-      <h1>系统管理端</h1>
-      <el-button type="danger" @click="handleLogout">退出登录</el-button>
-    </div>
-    <div class="admin-content">
-      <el-card>
-        <h2>欢迎，{{ userStore.userInfo.username }}</h2>
-        <p>这是系统管理端页面，您可以在这里管理整个平台的运营。</p>
-        <div class="features">
-          <el-button type="primary" size="large">用户管理</el-button>
-          <el-button type="primary" size="large">商品审核</el-button>
-          <el-button type="primary" size="large">订单管理</el-button>
-          <el-button type="primary" size="large">系统设置</el-button>
-          <el-button type="primary" size="large">数据分析</el-button>
+  <div class="admin-layout">
+    <header class="admin-header">
+      <div class="header-left">
+        <div class="logo">
+          <img src="@/assets/logo/logo.jpg" alt="农购宝管理后台" />
+          <span>农购宝管理后台</span>
         </div>
-      </el-card>
+      </div>
+
+      <div class="header-right">
+        <el-button text class="logout-btn" @click="handleLogout">
+          <i class="iconfont icon-tuichu"></i>
+          退出登录
+        </el-button>
+
+        <div class="admin-user">
+          <el-avatar :src="userStore.userInfo.avatar" :size="34">
+            {{ displayName.slice(0, 1) }}
+          </el-avatar>
+          <div class="user-meta">
+            <span class="username">{{ displayName }}</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="admin-shell">
+      <aside class="admin-sidebar">
+        <AdminSidebar :active-menu="activeMenu" @menu-change="handleMenuChange" />
+      </aside>
+
+      <section class="admin-main">
+        <main class="admin-content">
+          <component :is="currentComponent" />
+        </main>
+      </section>
     </div>
   </div>
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
-import { useUserStore } from '@/store/modules/user'
+import { computed, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { useUserStore } from '@/store/modules/user'
+import AdminSidebar from './components/AdminSidebar.vue'
+import AdminDashboard from './dashboard/index.vue'
+import AdminUsers from './users/index.vue'
+import AdminMerchants from './merchants/index.vue'
+import AdminCategories from './categories/index.vue'
+import AdminCommunity from './community/index.vue'
 
+const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 
-const handleLogout = () => {
-  userStore.logout()
+const defaultMenu = 'dashboard'
+const activeMenu = ref(typeof route.query.menu === 'string' ? route.query.menu : defaultMenu)
+
+watch(
+  () => route.query.menu,
+  (menu) => {
+    activeMenu.value = typeof menu === 'string' && menu ? menu : defaultMenu
+  }
+)
+
+const componentMap = {
+  dashboard: AdminDashboard,
+  users: AdminUsers,
+  merchants: AdminMerchants,
+  categories: AdminCategories,
+  community: AdminCommunity
+}
+
+const currentComponent = computed(() => componentMap[activeMenu.value] || AdminDashboard)
+const displayName = computed(() => userStore.userInfo.nickname || userStore.userInfo.username || '系统管理员')
+
+const handleMenuChange = (menu) => {
+  activeMenu.value = menu
+  router.push({ path: '/admin', query: { menu } })
+}
+
+const handleLogout = async () => {
+  await userStore.logout()
   ElMessage.success('已退出登录')
   router.push('/auth/login')
 }
 </script>
 
 <style lang="scss" scoped>
-.admin-page {
-  min-height: 100vh;
-  background: var(--app-layout-bg-color);
-
-  .admin-header {
-    background: var(--bg-white);
-    padding: 20px 40px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-
-    h1 {
-      font-size: 24px;
-      color: var(--text-primary-color);
-    }
-  }
-
-  .admin-content {
-    max-width: 1200px;
-    margin: 40px auto;
-    padding: 0 20px;
-
-    .el-card {
-      text-align: center;
-      padding: 40px;
-
-      h2 {
-        font-size: 28px;
-        color: var(--text-primary-color);
-        margin-bottom: 16px;
-      }
-
-      p {
-        font-size: 16px;
-        color: var(--text-secondary-color);
-        margin-bottom: 40px;
-      }
-
-      .features {
-        display: flex;
-        gap: 20px;
-        justify-content: center;
-        flex-wrap: wrap;
-      }
-    }
-  }
-}
+@use './index.scss';
 </style>

@@ -1,10 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useUserStore, USER_ROLES } from '@/store/modules/user'
 import { ElMessage } from 'element-plus'
+import { USER_ROLES, useUserStore } from '@/store/modules/user'
 import Layout from '@/view/layout/index.vue'
 
 const routes = [
-  // 认证相关路由（不需要布局）
   {
     path: '/auth',
     redirect: '/auth/login',
@@ -29,21 +28,18 @@ const routes = [
       }
     ]
   },
-  // 管理员路由
   {
     path: '/admin',
     name: 'Admin',
     component: () => import('@/view/admin/index.vue'),
-    meta: { title: '系统管理端', requireAuth: true, requireRole: USER_ROLES.ADMIN }
+    meta: { title: '农购宝管理后台', requireAuth: true, requireRole: USER_ROLES.ADMIN }
   },
-  // 农户管理后台
   {
     path: '/merchant/profile',
     name: 'MerchantProfile',
     component: () => import('@/view/merchant/profile/index.vue'),
     meta: { title: '农户管理后台', requireAuth: true, requireRole: USER_ROLES.MERCHANT }
   },
-  // 主应用路由（消费者）
   {
     path: '/',
     component: Layout,
@@ -71,7 +67,7 @@ const routes = [
         path: 'ai-consult',
         name: 'AiConsult',
         component: () => import('@/view/ai-consult/index.vue'),
-        meta: { title: 'AI咨询', hideFooter: true }
+        meta: { title: 'AI 咨询', hideFooter: true }
       },
       {
         path: 'community',
@@ -136,38 +132,33 @@ const router = createRouter({
   routes
 })
 
-// 路由守卫
+const getDefaultPathByRole = (role) => {
+  if (role === USER_ROLES.ADMIN) return '/admin'
+  if (role === USER_ROLES.MERCHANT) return '/merchant/profile'
+  return '/home'
+}
+
 router.beforeEach((to, from, next) => {
   const userStore = useUserStore()
   const isLogin = userStore.userInfo.isLogin
   const userRole = userStore.userInfo.role
 
-  // 设置页面标题
-  document.title = to.meta.title ? `${to.meta.title} - 农产品交易平台` : '农产品交易平台'
+  document.title = to.meta.title ? `${to.meta.title} - 农购宝` : '农购宝'
 
-  // 如果是访客页面（登录、注册等），已登录用户访问时重定向到首页
   if (to.meta.guest && isLogin) {
-    if (userRole === USER_ROLES.ADMIN) {
-      next('/admin')
-    } else if (userRole === USER_ROLES.MERCHANT) {
-      next('/merchant/profile')
-    } else {
-      next('/home')
-    }
+    next(getDefaultPathByRole(userRole))
     return
   }
 
-  // 需要登录的页面
   if (to.meta.requireAuth && !isLogin) {
     ElMessage.warning('请先登录')
     next('/auth/login')
     return
   }
 
-  // 需要特定角色的页面
   if (to.meta.requireRole && userRole !== to.meta.requireRole) {
     ElMessage.error('您没有权限访问该页面')
-    next('/')
+    next(getDefaultPathByRole(userRole))
     return
   }
 
