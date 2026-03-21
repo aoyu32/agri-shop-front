@@ -1,134 +1,182 @@
 <template>
-  <div class="auth-page" :class="selectedRole === USER_ROLES.CONSUMER ? 'consumer-mode' : 'merchant-mode'">
-    <!-- 角色切换按钮 -->
-    <div class="role-switch" :class="selectedRole === USER_ROLES.CONSUMER ? 'consumer-mode' : 'merchant-mode'">
-      <el-button
-        type="primary"
-        size="large"
-        @click="toggleRole"
-      >
-        {{ selectedRole === USER_ROLES.CONSUMER ? '农户登录' : '用户登录' }}
-      </el-button>
-    </div>
-
-    <div class="auth-container">
-      <div class="auth-card" :class="selectedRole === USER_ROLES.CONSUMER ? 'consumer-mode' : 'merchant-mode'">
-        <!-- Logo 和标题 -->
-        <div class="auth-header" :class="selectedRole === USER_ROLES.CONSUMER ? 'consumer-mode' : 'merchant-mode'">
-          <div class="logo">
-            <img src="@/assets/logo/logo.jpg" alt="Logo" />
-          </div>
-          <h2>{{ selectedRole === USER_ROLES.CONSUMER ? '用户登录' : '农户登录' }}</h2>
-          <p>农产品交易平台</p>
+  <div
+    class="auth-page"
+    :class="selectedRole === USER_ROLES.CONSUMER ? 'consumer-mode' : 'merchant-mode'"
+  >
+    <div class="auth-shell">
+      <section class="auth-brand-panel">
+        <div>
+          <span class="platform-name">农购宝</span>
         </div>
 
-        <!-- 登录表单 -->
-        <el-form
-          ref="loginFormRef"
-          :model="loginForm"
-          :rules="loginRules"
-          class="auth-form"
-          :class="selectedRole === USER_ROLES.CONSUMER ? 'consumer-mode' : 'merchant-mode'"
-        >
-          <el-form-item prop="username">
-            <el-input
-              v-model="loginForm.username"
-              placeholder="请输入用户名/手机号"
-              clearable
-            >
-              <template #prefix>
-                <i class="iconfont icon-yonghu"></i>
-              </template>
-            </el-input>
-          </el-form-item>
+        <h1>安心挑选新鲜农产品</h1>
+        <p>进入平台即可浏览优质农产品、参与社区交流，并完成下单与经营管理。</p>
 
-          <el-form-item prop="password">
-            <el-input
-              v-model="loginForm.password"
-              type="password"
-              placeholder="请输入密码"
-              show-password
-              clearable
-            >
-              <template #prefix>
-                <i class="iconfont icon-jiesuo"></i>
-              </template>
-            </el-input>
-          </el-form-item>
+        <div class="brand-points">
+          <article class="point-card">
+            <h3>消费者端</h3>
+            <p>浏览商品、下单购买、参与社区互动。</p>
+          </article>
 
-          <div class="form-options">
-            <el-checkbox v-model="loginForm.remember">记住密码</el-checkbox>
-            <router-link to="/auth/reset-password" class="link">忘记密码？</router-link>
+          <article class="point-card">
+            <h3>农户端</h3>
+            <p>管理店铺、商品、订单与售后业务。</p>
+          </article>
+
+          <article class="point-card">
+            <h3>管理员端</h3>
+            <p>查看平台数据并统一维护核心业务模块。</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="auth-card">
+        <div class="auth-card-inner">
+          <div class="auth-header">
+            <div class="logo">
+              <img src="@/assets/logo/logo.png" alt="农购宝" />
+            </div>
+            <h2>
+              {{ selectedRole === USER_ROLES.CONSUMER ? '农购宝用户登录' : '农购宝农户登录' }}
+            </h2>
+            <p>
+              {{
+                selectedRole === USER_ROLES.CONSUMER
+                  ? '消费者与普通买家从这里进入平台'
+                  : '农户账号从这里进入经营后台'
+              }}
+            </p>
           </div>
 
-          <el-button
-            type="primary"
-            class="submit-btn"
-            :loading="loading"
-            @click="handleLogin"
-          >
-            登录
-          </el-button>
-
-          <div class="form-footer">
-            还没有账号？
-            <router-link to="/auth/register" class="link">立即注册</router-link>
+          <div class="role-switch">
+            <button
+              v-for="item in roleOptions"
+              :key="item.value"
+              type="button"
+              class="role-btn"
+              :class="{ active: selectedRole === item.value }"
+              @click="switchRole(item.value)"
+            >
+              {{ item.label }}
+            </button>
           </div>
-        </el-form>
-      </div>
+
+          <el-form ref="loginFormRef" :model="loginForm" :rules="loginRules" class="auth-form">
+            <el-form-item prop="username">
+              <el-input
+                v-model="loginForm.username"
+                placeholder="请输入用户名/手机号"
+                clearable
+                @keyup.enter="handleLogin"
+              >
+                <template #prefix>
+                  <i class="iconfont icon-yonghu"></i>
+                </template>
+              </el-input>
+            </el-form-item>
+
+            <el-form-item prop="password">
+              <el-input
+                v-model="loginForm.password"
+                type="password"
+                placeholder="请输入密码"
+                show-password
+                clearable
+                @keyup.enter="handleLogin"
+              >
+                <template #prefix>
+                  <i class="iconfont icon-jiesuo"></i>
+                </template>
+              </el-input>
+            </el-form-item>
+
+            <div class="form-options">
+              <el-checkbox v-model="loginForm.remember">记住登录状态</el-checkbox>
+              <router-link to="/auth/reset-password" class="link">忘记密码</router-link>
+            </div>
+
+            <el-button type="primary" class="submit-btn" :loading="loading" @click="handleLogin">
+              登录
+            </el-button>
+
+            <div class="form-footer">
+              还没有账号？
+              <router-link to="/auth/register" class="link">立即注册</router-link>
+            </div>
+          </el-form>
+        </div>
+      </section>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { useUserStore, USER_ROLES } from '@/store/modules/user'
+import { USER_ROLES, useUserStore } from '@/store/modules/user'
 
 const router = useRouter()
 const userStore = useUserStore()
+
+const roleOptions = [
+  { value: USER_ROLES.CONSUMER, label: '消费者' },
+  { value: USER_ROLES.MERCHANT, label: '农户' },
+  { value: USER_ROLES.ADMIN, label: '管理员' }
+]
 
 const selectedRole = ref(USER_ROLES.CONSUMER)
 const loading = ref(false)
 const loginFormRef = ref(null)
 
-// 切换角色
-const toggleRole = () => {
-  selectedRole.value = selectedRole.value === USER_ROLES.CONSUMER 
-    ? USER_ROLES.MERCHANT 
-    : USER_ROLES.CONSUMER
-  
-  // 切换角色时自动填充对应的测试账号
-  if (selectedRole.value === USER_ROLES.CONSUMER) {
-    loginForm.username = 'consumer123'
-    loginForm.password = '123456'
-  } else {
-    loginForm.username = 'farmer123'
-    loginForm.password = '123456'
-  }
-}
-
-// 登录表单（默认填充消费者测试账号）
 const loginForm = reactive({
   username: 'consumer123',
   password: '123456',
   remember: false
 })
 
-// 表单验证规则
 const loginRules = {
   username: [
     { required: true, message: '请输入用户名/手机号', trigger: 'blur' },
-    { min: 3, message: '用户名至少3个字符', trigger: 'blur' }
+    { min: 3, message: '用户名长度不能少于 3 个字符', trigger: 'blur' }
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, message: '密码至少6个字符', trigger: 'blur' }
+    { min: 6, message: '密码长度不能少于 6 个字符', trigger: 'blur' }
   ]
 }
 
-// 登录处理
+const switchRole = (role) => {
+  selectedRole.value = role
+
+  if (role === USER_ROLES.CONSUMER) {
+    loginForm.username = 'consumer123'
+    loginForm.password = '123456'
+    return
+  }
+
+  if (role === USER_ROLES.MERCHANT) {
+    loginForm.username = 'farmer123'
+    loginForm.password = '123456'
+    return
+  }
+
+  loginForm.username = ''
+  loginForm.password = ''
+}
+
+const getRedirectPathByRole = (role) => {
+  if (role === USER_ROLES.ADMIN) {
+    return '/admin'
+  }
+
+  if (role === USER_ROLES.MERCHANT) {
+    return '/merchant/profile'
+  }
+
+  return '/home'
+}
+
 const handleLogin = async () => {
   if (!loginFormRef.value) return
 
@@ -136,21 +184,21 @@ const handleLogin = async () => {
     await loginFormRef.value.validate()
     loading.value = true
 
-    // 调用登录 API，传递期望的角色
-    await userStore.login({
+    const res = await userStore.login({
       username: loginForm.username,
       password: loginForm.password,
-      remember: loginForm.remember,
-      role: selectedRole.value  // 传递当前选择的角色
+      remember: loginForm.remember
     })
 
-    ElMessage.success('登录成功')
+    const loginRole = res?.data?.user?.role || userStore.userInfo.role
+    if (loginRole) {
+      selectedRole.value = loginRole
+    }
 
-    // 根据角色跳转
-    router.push('/home')
+    ElMessage.success('登录成功')
+    await router.replace(getRedirectPathByRole(loginRole))
   } catch (error) {
     if (error !== false) {
-      // API 错误已经在 request.js 中处理，这里不需要再显示
       console.error('登录失败:', error)
     }
   } finally {
@@ -165,322 +213,379 @@ const handleLogin = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 36px;
+  position: relative;
+  overflow: hidden;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  padding: 20px;
-  position: relative;
-  transition: all 0.5s ease;
 
-  // 消费者背景 - 清新农田
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+
   &.consumer-mode {
     background-image: url('https://images.unsplash.com/photo-1560493676-04071c5f467b?w=1920&q=80');
-    
+
     &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(82, 196, 26, 0.15);
-      z-index: 0;
+      background: rgba(82, 196, 26, 0.12);
     }
   }
 
-  // 农户背景 - 金色麦田
   &.merchant-mode {
     background-image: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1920&q=80');
-    
+
     &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(56, 142, 60, 0.18);
-      z-index: 0;
+      background: rgba(56, 142, 60, 0.16);
+    }
+  }
+}
+
+.auth-shell {
+  width: min(1045px, calc(100vw - 72px));
+  min-height: 620px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(400px, 0.82fr);
+  border-radius: 28px;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.14);
+}
+
+.auth-brand-panel {
+  padding: 38px 40px;
+  color: #23411d;
+  background: linear-gradient(180deg, rgba(237, 247, 222, 0.84), rgba(244, 250, 234, 0.84));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  .brand-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 120px;
+    height: 44px;
+    padding: 0 18px;
+    border-radius: 14px;
+    background: rgba(187, 229, 164, 0.78);
+    box-shadow: inset 0 0 0 1px rgba(82, 196, 26, 0.08);
+    font-size: 14px;
+    font-weight: 700;
+    color: #23411d;
+    letter-spacing: 0.4px;
+  }
+
+  h1 {
+    margin: 24px 0 12px;
+    max-width: 640px;
+    font-size: clamp(28px, 2.4vw, 40px);
+    line-height: 1.15;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    color: var(--theme-primary-color);
+    font-family: 'Quicksand', serif;
+  }
+
+  p {
+    margin: 0;
+    max-width: 620px;
+    font-size: 15px;
+    line-height: 1.8;
+    color: rgba(35, 65, 29, 0.8);
+  }
+}
+
+.brand-points {
+  margin-top: 52px;
+  display: grid;
+  gap: 14px;
+  max-width: 620px;
+}
+
+.point-card {
+  padding: 16px 18px;
+  min-height: 82px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 10px 24px rgba(61, 101, 33, 0.06);
+
+  h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #23411d;
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.65;
+    color: rgba(35, 65, 29, 0.72);
+  }
+}
+
+.auth-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 22px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.auth-card-inner {
+  width: min(430px, 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 22px;
+  width: 100%;
+
+  .logo {
+    width: 74px;
+    height: 74px;
+    margin: 0 auto 12px;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 18px;
+    }
+  }
+
+  h2 {
+    margin: 0 0 10px;
+    font-size: 22px;
+    line-height: 1.2;
+    font-weight: 800;
+    color: #23411d;
+  }
+
+  p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: rgba(35, 65, 29, 0.68);
+  }
+}
+
+.role-switch {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.role-btn {
+  height: 42px;
+  border-radius: 14px;
+  border: 1px solid rgba(82, 196, 26, 0.16);
+  background: rgba(255, 255, 255, 0.94);
+  color: rgba(35, 65, 29, 0.74);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: rgba(82, 196, 26, 0.38);
+    color: var(--theme-primary-dark);
+    transform: translateY(-1px);
+  }
+
+  &.active {
+    border-color: transparent;
+    background: var(--theme-primary-color);
+    color: #fff;
+    box-shadow: 0 10px 22px rgba(82, 196, 26, 0.22);
+  }
+}
+
+.auth-form {
+  width: 100%;
+
+  .el-form-item {
+    margin-bottom: 16px;
+  }
+
+  :deep(.el-input__wrapper) {
+    min-height: 46px;
+    border-radius: 14px;
+    box-shadow: 0 0 0 1px rgba(82, 196, 26, 0.14) inset;
+    background: rgba(255, 255, 255, 0.94);
+  }
+
+  :deep(.el-input__prefix) {
+    color: var(--text-placeholder-color);
+    padding-right: 6px;
+  }
+
+  :deep(.el-input__inner) {
+    font-size: 14px;
+  }
+}
+
+.platform-name {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--theme-primary-color);
+  font-family: 'Quicksand', serif;
+}
+
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 2px 0 14px;
+}
+
+.link {
+  font-size: 12px;
+  color: var(--theme-primary-dark);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.submit-btn {
+  width: 100%;
+  height: 46px;
+  border: none;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  background: var(--theme-primary-color);
+  box-shadow: 0 12px 24px rgba(82, 196, 26, 0.18);
+
+  &:hover {
+    background: var(--theme-primary-dark);
+  }
+}
+
+.form-footer {
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: rgba(35, 65, 29, 0.58);
+}
+
+@media screen and (max-width: 1200px) {
+  .auth-shell {
+    width: min(980px, calc(100vw - 48px));
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .auth-brand-panel {
+    padding-bottom: 28px;
+  }
+
+  .auth-card {
+    padding-top: 10px;
+    padding-bottom: 30px;
+  }
+}
+
+@media screen and (max-width: 860px) {
+  .auth-page {
+    padding: 18px;
+  }
+
+  .auth-shell {
+    width: 100%;
+    border-radius: 22px;
+  }
+
+  .auth-brand-panel {
+    padding: 28px 22px;
+
+    h1 {
+      font-size: 26px;
+      color: var(--theme-primary-color);
+      font-family: 'Quicksand', serif;
+    }
+
+    p {
+      font-size: 14px;
+    }
+  }
+
+  .brand-points {
+    margin-top: 22px;
+    gap: 12px;
+  }
+
+  .point-card {
+    padding: 14px 16px;
+    min-height: auto;
+
+    h3 {
+      font-size: 15px;
+    }
+
+    p {
+      font-size: 13px;
+    }
+  }
+
+  .auth-card {
+    padding: 18px 16px 24px;
+  }
+
+  .auth-header {
+    h2 {
+      font-size: 20px;
+    }
+
+    p {
+      font-size: 13px;
     }
   }
 
   .role-switch {
-    position: absolute;
-    top: 30px;
-    right: 40px;
-    z-index: 10;
+    grid-template-columns: 1fr;
+  }
 
-    .el-button {
-      background: rgba(255, 255, 255, 0.95);
-      border: none;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      font-weight: 500;
-      transition: all 0.3s ease;
+  .role-btn {
+    height: 40px;
+    font-size: 14px;
+  }
 
-      &:hover {
-        background: #fff;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-      }
+  .auth-form {
+    :deep(.el-input__wrapper) {
+      min-height: 44px;
     }
 
-    // 消费者模式按钮
-    &.consumer-mode .el-button {
-      color: var(--theme-primary-color);
-      
-      &:hover {
-        color: var(--theme-primary-dark);
-      }
-    }
-
-    // 农户模式按钮
-    &.merchant-mode .el-button {
-      color: #388e3c;
-      
-      &:hover {
-        color: #2e7d32;
-      }
+    :deep(.el-input__inner) {
+      font-size: 14px;
     }
   }
 
-  .auth-container {
-    width: 100%;
-    max-width: 420px;
-    position: relative;
-    z-index: 1;
-
-    .auth-card {
-      background: rgba(255, 255, 255, 0.75);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-radius: 16px;
-      padding: 40px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      transition: all 0.3s ease;
-
-      // 消费者模式卡片
-      &.consumer-mode {
-        border-top: 1px solid var(--theme-primary-color);
-      }
-
-      // 农户模式卡片
-      &.merchant-mode {
-        border-top: 1px solid #388e3c;
-      }
-
-      .auth-header {
-        text-align: center;
-        margin-bottom: 30px;
-
-        .logo {
-          width: 80px;
-          height: 80px;
-          margin: 0 auto 20px;
-          border-radius: 50%;
-          overflow: hidden;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-          transition: all 0.3s ease;
-
-          img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-          }
-        }
-
-        h2 {
-          font-size: 24px;
-          font-weight: 600;
-          margin-bottom: 8px;
-          transition: color 0.3s ease;
-        }
-
-        p {
-          font-size: 14px;
-          color: var(--text-secondary-color);
-        }
-
-        // 消费者模式标题
-        &.consumer-mode {
-          .logo {
-            border: 3px solid var(--theme-primary-color);
-          }
-
-          h2 {
-            color: var(--theme-primary-color);
-          }
-        }
-
-        // 农户模式标题
-        &.merchant-mode {
-          .logo {
-            border: 3px solid #388e3c;
-          }
-
-          h2 {
-            color: #388e3c;
-          }
-        }
-      }
-
-      .auth-form {
-        .el-form-item {
-          margin-bottom: 20px;
-        }
-
-        :deep(.el-input) {
-          height: 40px;
-          
-          .el-input__wrapper {
-            padding: 8px 15px;
-            border-radius: 8px;
-            box-shadow: 0 0 0 1px var(--el-input-border-color, var(--el-border-color)) inset;
-          }
-
-          .el-input__inner {
-            height: 24px;
-            line-height: 24px;
-          }
-
-          .el-input__prefix {
-            margin-right: 8px;
-
-            .iconfont {
-              font-size: 18px;
-              color: var(--text-placeholder-color);
-            }
-          }
-
-          .el-input__suffix {
-            .el-input__suffix-inner {
-              display: flex;
-              align-items: center;
-            }
-          }
-
-          .el-input__password {
-            font-size: 16px;
-          }
-        }
-
-        .form-options {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 24px;
-
-          .link {
-            font-size: 13px;
-            text-decoration: none;
-            transition: color 0.3s ease;
-
-            &:hover {
-              text-decoration: underline;
-            }
-          }
-        }
-
-        // 消费者模式链接
-        &.consumer-mode {
-          .form-options .link {
-            color: var(--theme-primary-color);
-          }
-
-          .form-footer .link {
-            color: var(--theme-primary-color);
-          }
-
-          .submit-btn {
-            background: var(--theme-primary-color);
-            border-color: var(--theme-primary-color);
-
-            &:hover {
-              background: var(--theme-primary-dark);
-              border-color: var(--theme-primary-dark);
-            }
-          }
-        }
-
-        // 农户模式链接
-        &.merchant-mode {
-          .form-options .link {
-            color: #388e3c;
-          }
-
-          .form-footer .link {
-            color: #388e3c;
-          }
-
-          .submit-btn {
-            background: linear-gradient(135deg, #388e3c 0%, #2e7d32 100%);
-            border: none;
-
-            &:hover {
-              background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
-              transform: translateY(-2px);
-              box-shadow: 0 4px 12px rgba(56, 142, 60, 0.4);
-            }
-          }
-        }
-
-        .submit-btn {
-          width: 100%;
-          height: 44px;
-          font-size: 16px;
-          border-radius: 8px;
-          margin-bottom: 16px;
-          transition: all 0.3s ease;
-        }
-
-        .form-footer {
-          text-align: center;
-          font-size: 13px;
-          color: var(--text-secondary-color);
-
-          .link {
-            text-decoration: none;
-            margin-left: 4px;
-
-            &:hover {
-              text-decoration: underline;
-            }
-          }
-        }
-      }
-    }
+  .submit-btn {
+    height: 44px;
+    font-size: 14px;
   }
 
-  @media screen and (max-width: 768px) {
-    .role-switch {
-      top: 20px;
-      right: 20px;
-
-      .el-button {
-        padding: 8px 16px;
-        font-size: 14px;
-      }
-    }
-  }
-
-  @media screen and (max-width: 480px) {
-    padding: 12px;
-
-    .role-switch {
-      top: 15px;
-      right: 15px;
-
-      .el-button {
-        padding: 8px 12px;
-        font-size: 13px;
-      }
-    }
-
-    .auth-container {
-      .auth-card {
-        padding: 24px;
-      }
-    }
+  .form-footer {
+    font-size: 12px;
   }
 }
 </style>
