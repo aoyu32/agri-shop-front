@@ -9,7 +9,7 @@ import request from '@/utils/request'
  */
 export function sendMessageStream(data, onMessage, onError, onComplete) {
     const token = localStorage.getItem('token')
-    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
 
     fetch(`${baseURL}/api/ai-consult/send-message-stream`, {
         method: 'POST',
