@@ -4,7 +4,7 @@
       <template #header>
         <div class="module-header">
           <div class="header-text">
-            <h3>商户管理</h3>
+            <h3>店铺管理</h3>
             <p>管理农户店铺、开店申请与平台推荐信息</p>
           </div>
           <el-button type="primary" @click="openCreateDialog">新增店铺</el-button>

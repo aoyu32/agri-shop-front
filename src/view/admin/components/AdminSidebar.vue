@@ -17,7 +17,7 @@
 
       <el-menu-item index="merchants">
         <i class="iconfont icon-shangdian-2"></i>
-        <span>商户管理</span>
+        <span>店铺管理</span>
       </el-menu-item>
 
       <el-menu-item index="categories">
