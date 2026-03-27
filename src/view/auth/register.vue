@@ -1,25 +1,38 @@
 <template>
-  <div class="auth-page" :class="selectedRole === USER_ROLES.CONSUMER ? 'consumer-mode' : 'merchant-mode'">
-    <!-- 角色切换按钮 -->
-    <div class="role-switch" :class="selectedRole === USER_ROLES.CONSUMER ? 'consumer-mode' : 'merchant-mode'">
-      <el-button
-        type="primary"
-        size="large"
-        @click="toggleRole"
-      >
-        {{ selectedRole === USER_ROLES.CONSUMER ? '农户注册' : '用户注册' }}
-      </el-button>
-    </div>
-
+  <div
+    class="auth-page"
+    :class="selectedRole === USER_ROLES.CONSUMER ? 'consumer-mode' : 'merchant-mode'"
+  >
     <div class="auth-container">
-      <div class="auth-card" :class="selectedRole === USER_ROLES.CONSUMER ? 'consumer-mode' : 'merchant-mode'">
+      <div
+        class="auth-card"
+        :class="selectedRole === USER_ROLES.CONSUMER ? 'consumer-mode' : 'merchant-mode'"
+      >
         <!-- Logo 和标题 -->
-        <div class="auth-header" :class="selectedRole === USER_ROLES.CONSUMER ? 'consumer-mode' : 'merchant-mode'">
+        <div
+          class="auth-header"
+          :class="selectedRole === USER_ROLES.CONSUMER ? 'consumer-mode' : 'merchant-mode'"
+        >
           <div class="logo">
             <img src="@/assets/logo/logo.jpg" alt="Logo" />
           </div>
           <h2>{{ selectedRole === USER_ROLES.CONSUMER ? '用户注册' : '农户注册' }}</h2>
-          <p>加入农产品交易平台</p>
+        </div>
+
+        <div
+          class="role-switch"
+          :class="selectedRole === USER_ROLES.CONSUMER ? 'consumer-mode' : 'merchant-mode'"
+        >
+          <button
+            v-for="item in roleOptions"
+            :key="item.value"
+            type="button"
+            class="role-btn"
+            :class="{ active: selectedRole === item.value }"
+            @click="switchRole(item.value)"
+          >
+            {{ item.label }}
+          </button>
         </div>
 
         <!-- 注册表单 -->
@@ -31,11 +44,7 @@
           :class="selectedRole === USER_ROLES.CONSUMER ? 'consumer-mode' : 'merchant-mode'"
         >
           <el-form-item prop="username">
-            <el-input
-              v-model="registerForm.username"
-              placeholder="请输入用户名"
-              clearable
-            >
+            <el-input v-model="registerForm.username" placeholder="请输入用户名" clearable>
               <template #prefix>
                 <i class="iconfont icon-yonghu"></i>
               </template>
@@ -43,11 +52,7 @@
           </el-form-item>
 
           <el-form-item prop="phone">
-            <el-input
-              v-model="registerForm.phone"
-              placeholder="请输入手机号"
-              clearable
-            >
+            <el-input v-model="registerForm.phone" placeholder="请输入手机号" clearable>
               <template #prefix>
                 <i class="iconfont icon-shouji"></i>
               </template>
@@ -55,21 +60,12 @@
           </el-form-item>
 
           <el-form-item prop="code">
-            <el-input
-              v-model="registerForm.code"
-              placeholder="请输入验证码"
-              clearable
-            >
+            <el-input v-model="registerForm.code" placeholder="请输入验证码" clearable>
               <template #prefix>
                 <i class="iconfont icon-yanzhengma"></i>
               </template>
               <template #suffix>
-                <el-button
-                  type="primary"
-                  link
-                  :disabled="countdown > 0"
-                  @click="handleSendCode"
-                >
+                <el-button type="primary" link :disabled="countdown > 0" @click="handleSendCode">
                   {{ countdown > 0 ? `${countdown}秒后重试` : '获取验证码' }}
                 </el-button>
               </template>
@@ -113,12 +109,7 @@
             </el-checkbox>
           </el-form-item>
 
-          <el-button
-            type="primary"
-            class="submit-btn"
-            :loading="loading"
-            @click="handleRegister"
-          >
+          <el-button type="primary" class="submit-btn" :loading="loading" @click="handleRegister">
             注册
           </el-button>
 
@@ -146,11 +137,15 @@ const loading = ref(false)
 const countdown = ref(0)
 const registerFormRef = ref(null)
 
+// 角色选项（与登录页一致）
+const roleOptions = [
+  { value: USER_ROLES.CONSUMER, label: '消费者' },
+  { value: USER_ROLES.MERCHANT, label: '农户' }
+]
+
 // 切换角色
-const toggleRole = () => {
-  selectedRole.value = selectedRole.value === USER_ROLES.CONSUMER 
-    ? USER_ROLES.MERCHANT 
-    : USER_ROLES.CONSUMER
+const switchRole = (role) => {
+  selectedRole.value = role
 }
 
 // 注册表单
@@ -200,9 +195,7 @@ const registerRules = {
     { required: true, message: '请输入用户名', trigger: 'blur' },
     { min: 3, max: 20, message: '用户名长度为3-20个字符', trigger: 'blur' }
   ],
-  phone: [
-    { required: true, validator: validatePhone, trigger: 'blur' }
-  ],
+  phone: [{ required: true, validator: validatePhone, trigger: 'blur' }],
   code: [
     { required: true, message: '请输入验证码', trigger: 'blur' },
     { len: 6, message: '验证码为6位数字', trigger: 'blur' }
@@ -211,12 +204,8 @@ const registerRules = {
     { required: true, message: '请输入密码', trigger: 'blur' },
     { min: 6, max: 20, message: '密码长度为6-20个字符', trigger: 'blur' }
   ],
-  confirmPassword: [
-    { required: true, validator: validateConfirmPassword, trigger: 'blur' }
-  ],
-  agree: [
-    { validator: validateAgree, trigger: 'change' }
-  ]
+  confirmPassword: [{ required: true, validator: validateConfirmPassword, trigger: 'blur' }],
+  agree: [{ validator: validateAgree, trigger: 'change' }]
 }
 
 // 发送验证码
@@ -234,13 +223,13 @@ const handleSendCode = async () => {
   try {
     const res = await sendCode(registerForm.phone)
     ElMessage.success(res.message || '验证码已发送')
-    
+
     // 开发环境显示验证码
     if (res.data?.code) {
       console.log('验证码:', res.data.code)
       ElMessage.info(`验证码: ${res.data.code}（开发环境）`)
     }
-    
+
     countdown.value = 60
     const timer = setInterval(() => {
       countdown.value--
@@ -299,7 +288,7 @@ const handleRegister = async () => {
   // 消费者背景 - 绿色菜园
   &.consumer-mode {
     background-image: url('https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=1920&q=80');
-    
+
     &::before {
       content: '';
       position: absolute;
@@ -315,7 +304,7 @@ const handleRegister = async () => {
   // 农户背景 - 丰收农田
   &.merchant-mode {
     background-image: url('https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=1920&q=80');
-    
+
     &::before {
       content: '';
       position: absolute;
@@ -329,39 +318,52 @@ const handleRegister = async () => {
   }
 
   .role-switch {
-    position: absolute;
-    top: 30px;
-    right: 40px;
-    z-index: 10;
+    position: relative;
+    top: auto;
+    right: auto;
+    z-index: auto;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
 
     .el-button {
-      background: rgba(255, 255, 255, 0.95);
-      border: none;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      display: none;
+    }
+
+    .role-btn {
+      flex: 1;
+      min-width: 120px;
+      height: 42px;
+      border-radius: 14px;
+      border: 1px solid rgba(82, 196, 26, 0.16);
+      background: rgba(255, 255, 255, 0.94);
+      color: rgba(35, 65, 29, 0.74);
+      font-size: 14px;
       font-weight: 500;
-      transition: all 0.3s ease;
+      cursor: pointer;
+      transition: all 0.2s ease;
 
       &:hover {
-        background: #fff;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-      }
-    }
-
-    &.consumer-mode .el-button {
-      color: var(--theme-primary-color);
-      
-      &:hover {
+        border-color: rgba(82, 196, 26, 0.38);
         color: var(--theme-primary-dark);
+        transform: translateY(-1px);
       }
     }
 
-    &.merchant-mode .el-button {
-      color: #388e3c;
-      
-      &:hover {
-        color: #2e7d32;
-      }
+    .role-btn.active {
+      border-color: transparent;
+      background: var(--theme-primary-color);
+      color: #fff;
+      box-shadow: 0 10px 22px rgba(82, 196, 26, 0.22);
+    }
+
+    &.consumer-mode .role-btn.active {
+      background: var(--theme-primary-color);
+    }
+
+    &.merchant-mode .role-btn.active {
+      background: #388e3c;
     }
   }
 
@@ -449,7 +451,7 @@ const handleRegister = async () => {
 
         :deep(.el-input) {
           height: 40px;
-          
+
           .el-input__wrapper {
             padding: 8px 15px;
             border-radius: 8px;
@@ -569,12 +571,13 @@ const handleRegister = async () => {
 
   @media screen and (max-width: 768px) {
     .role-switch {
-      top: 20px;
-      right: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
 
-      .el-button {
-        padding: 8px 16px;
-        font-size: 14px;
+      .role-btn {
+        min-width: 100px;
+        font-size: 13px;
       }
     }
   }
@@ -583,11 +586,13 @@ const handleRegister = async () => {
     padding: 12px;
 
     .role-switch {
-      top: 15px;
-      right: 15px;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
 
-      .el-button {
-        padding: 8px 12px;
+      .role-btn {
+        min-width: 0;
+        width: 100%;
         font-size: 13px;
       }
     }
