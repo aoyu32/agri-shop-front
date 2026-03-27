@@ -130,9 +130,10 @@ const loading = ref(false)
 const loginFormRef = ref(null)
 
 const loginForm = reactive({
-  username: 'consumer123',
-  password: '123456',
-  remember: false
+  username: '',
+  password: '',
+  remember: true,
+  role: USER_ROLES.CONSUMER
 })
 
 const loginRules = {
@@ -148,19 +149,7 @@ const loginRules = {
 
 const switchRole = (role) => {
   selectedRole.value = role
-
-  if (role === USER_ROLES.CONSUMER) {
-    loginForm.username = 'consumer123'
-    loginForm.password = '123456'
-    return
-  }
-
-  if (role === USER_ROLES.MERCHANT) {
-    loginForm.username = 'farmer123'
-    loginForm.password = '123456'
-    return
-  }
-
+  loginForm.role = role
   loginForm.username = ''
   loginForm.password = ''
 }
@@ -171,7 +160,7 @@ const getRedirectPathByRole = (role) => {
   }
 
   if (role === USER_ROLES.MERCHANT) {
-    return '/merchant/profile'
+    return '/home'
   }
 
   return '/home'
@@ -187,7 +176,8 @@ const handleLogin = async () => {
     const res = await userStore.login({
       username: loginForm.username,
       password: loginForm.password,
-      remember: loginForm.remember
+      remember: loginForm.remember,
+      role: loginForm.role || selectedRole.value
     })
 
     const loginRole = res?.data?.user?.role || userStore.userInfo.role
