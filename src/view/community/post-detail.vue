@@ -46,6 +46,7 @@
                 :alt="`图片${index + 1}`"
                 class="post-image"
                 @click="previewImage(post.images, index)"
+                style="width: 200px; height: 200px; object-fit: cover; border-radius: 8px; cursor: pointer;"
               />
             </div>
           </div>
@@ -68,7 +69,7 @@
           <!-- 发表评论 -->
           <div class="comment-form">
             <div class="comment-input-area">
-              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" alt="用户头像" class="user-avatar" />
+              <img :src="userStore.userInfo.avatar" alt="用户头像" class="user-avatar" />
               <el-input
                 v-model="newComment"
                 type="textarea"
@@ -213,9 +214,10 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import MarkdownRenderer from '@/components/markdown-renderer/index.vue'
 import { getPostDetail, getRelatedPosts, getCommentList, createComment, toggleCommentLike, togglePostLike, getUserStats } from '@/apis/community'
-
+import { useUserStore } from '@/store/modules/user'
 const route = useRoute()
 const router = useRouter()
+const userStore = useUserStore()
 
 // 响应式数据
 const post = ref(null)
